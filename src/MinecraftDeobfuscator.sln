@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Minecraft Deobfuscator", "Minecraft Deobfuscator\Minecraft Deobfuscator.csproj", "{366EF8E0-12BA-4510-86D9-88C3851C91CD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MinecraftDeobfuscator", "MinecraftDeobfuscator\MinecraftDeobfuscator.csproj", "{366EF8E0-12BA-4510-86D9-88C3851C91CD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {51EBD62D-E92F-4E05-801B-F665FB8F254B}
 	EndGlobalSection
 EndGlobal
