@@ -50,6 +50,9 @@
     <Compile Include="Deobfuscator.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Deobfuscator.designer.cs">
+      <DependentUpon>Deobfuscator.cs</DependentUpon>
+    </Compile>
     <Compile Include="Node.cs" />
     <Compile Include="NodeDictionary.cs" />
     <Compile Include="Program.cs" />
@@ -64,6 +67,7 @@
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Versions.cs" />
     <Compile Include="ZipInfo.cs" />
   </ItemGroup>
   <ItemGroup>
