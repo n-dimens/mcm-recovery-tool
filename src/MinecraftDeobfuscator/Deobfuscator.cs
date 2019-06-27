@@ -17,62 +17,17 @@ using System.Windows.Forms;
 
 namespace Minecraft_Deobfuscator {
     public partial class Deobfuscator {
-        private static string SRGZipUrl = "http://export.mcpbot.bspk.rs/mcp/{0}/mcp-{0}-srg.zip";
-        private static string StableZipUrl = "http://export.mcpbot.bspk.rs/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
-        private static string SnapshotZipUrl = "http://export.mcpbot.bspk.rs/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
-        private static string LiveFields = "http://export.mcpbot.bspk.rs/fields.csv";
-        private static string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
-        private static string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
         private Dictionary<string, Dictionary<string, string[]>> mappings = new Dictionary<string, Dictionary<string, string[]>>();
-        private NodeDictionary nodeDictionary = new NodeDictionary();
+        private readonly NodeDictionary nodeDictionary = new NodeDictionary();
         private bool queueFetchMappings;
         private bool queueDownloadMappings;
         private bool downloadLiveMappings;
-        private List<ZipInfo> javaFiles = new List<ZipInfo>();
-        private List<ZipInfo> miscFiles = new List<ZipInfo>();
-        private string mcVersion;
-        private string snapshot;
-        private string mapType;
-        private Stopwatch stopwatch = new Stopwatch();
-        private long filesCompleted;
-        private long hits;
-        private bool disable;
-        private IContainer components;
-        private ZipArchive zipMapping;
-
-        private int FilesFound {
-            get { return this.javaFiles.Count + this.miscFiles.Count; }
-        }
-
-        private bool Disable {
-            get { return this.disable; }
-            set {
-                this.disable = value;
-                ValidateReady(null, null);
-            }
-        }
-
-        private bool Ready {
-            get {
-                int num;
-                if (!this.bgDeobfuscator.IsBusy && !Disable && (this.nodeDictionary.Count > 0 && !this.queueFetchMappings) &&
-                    !this.queueDownloadMappings) {
-                    string fileName = this.fileDialog.FileName;
-                    if ((fileName != null ? (fileName.Equals("") ? 1 : 0) : 1) == 0) {
-                        string selectedPath = this.folderBrowser.SelectedPath;
-                        num = (selectedPath != null ? (selectedPath.Equals("") ? 1 : 0) : 1) == 0 ? 1 : 0;
-                        goto label_4;
-                    }
-                }
-
-                num = 0;
-                label_4:
-                return num != 0;
-            }
-        }
+        private readonly List<ZipInfo> javaFiles = new List<ZipInfo>();
+        private readonly List<ZipInfo> miscFiles = new List<ZipInfo>();
 
         public Deobfuscator() {
             InitializeComponent();
+            StartPosition = FormStartPosition.CenterScreen;
         }
 
         private void Form_OnLoad(object sender, EventArgs e) {
@@ -82,22 +37,34 @@ namespace Minecraft_Deobfuscator {
             this.mappingDownloader.DoWork += FetchMapping;
             this.mappingDownloader.RunWorkerCompleted += MappingFetched;
             this.bgDeobfuscator.DoWork += Deobfuscate;
-            this.bgDeobfuscator.RunWorkerCompleted += (s, ev) => {
-                this.stopwatch.Stop();
-                Logf("Replaced {0} in {1:n3} seconds", this.hits, this.stopwatch.ElapsedMilliseconds / 1000.0);
-                Log("Finished");
-            };
-            
+            this.bgDeobfuscator.RunWorkerCompleted += Deobfuscate_OnCompleted;
             this.bgDeobfuscator.ProgressChanged += BgDeobfuscator_ProgressChanged;
             LoadVersions();
+        }
+
+        // only for report progress
+        private int GetFilesFoundCount() {
+            return this.javaFiles.Count + this.miscFiles.Count;
+        }
+
+        private bool IsReady() {
+            if (!this.bgDeobfuscator.IsBusy && (this.nodeDictionary.Count > 0 && !this.queueFetchMappings) &&
+                !this.queueDownloadMappings) {
+                var fileName = this.fileDialog.FileName;
+                if ((fileName != null ? (fileName.Equals("") ? 1 : 0) : 1) == 0) {
+                    string selectedPath = this.folderBrowser.SelectedPath;
+                    var num = (selectedPath != null ? (selectedPath.Equals("") ? 1 : 0) : 1) == 0 ? 1 : 0;
+                    return num != 0;
+                }
+            }
+
+            return false;
         }
 
         // openButton.Click
         // startToolStripMenuItem.Click
         private void SelectTarget(object sender, EventArgs e) {
             this.progressBar.Value = 0;
-            this.javaFiles.Clear();
-            this.miscFiles.Clear();
             this.errorProvider1.Clear();
             this.foundFilesLabel.Text = "Found Files: 0";
             this.javaFilesLabel.Text = "Java Files: 0";
@@ -106,28 +73,34 @@ namespace Minecraft_Deobfuscator {
                 return;
             }
 
+            this.javaFiles.Clear();
+            this.miscFiles.Clear();
             using (var stream = this.fileDialog.OpenFile()) {
                 if (ParseInputZip(stream)) {
-                    this.fileName.Text = "File: " + this.fileDialog.FileName.Substring(this.fileDialog.FileName.LastIndexOf('\\') + 1);
+                    this.lblFileName.Text = "File: " + this.fileDialog.FileName.Substring(this.fileDialog.FileName.LastIndexOf('\\') + 1);
                     if (this.folderBrowser.SelectedPath == "") {
                         this.folderBrowser.SelectedPath = this.fileDialog.FileName.Substring(0, this.fileDialog.FileName.LastIndexOf('\\'));
                         this.saveLocation.Text = "Save To: " + this.folderBrowser.SelectedPath + "\\output";
                     }
                 }
                 else {
-                    this.fileName.Text = "File:";
+                    this.errorProvider1.SetError(this.openButton, "Non Decompiled File");
+                    Log("File is not Decompiled");
+                    this.lblFileName.Text = "File:";
                 }
             }
+
+            this.foundFilesLabel.Text = "Found Files: " + GetFilesFoundCount();
+            this.javaFilesLabel.Text = "Java Files: " + this.javaFiles.Count;
+            this.miscFileLabel.Text = "Misc Files: " + this.miscFiles.Count;
         }
-        
+
         private bool ParseInputZip(Stream stream) {
             using (var zipArchive = new ZipArchive(stream, ZipArchiveMode.Read)) {
                 foreach (var entry in zipArchive.Entries) {
                     if (entry.Name != "") {
                         if (entry.FullName.EndsWith(".class")) {
                             Debug.WriteLine("Class File Found");
-                            this.errorProvider1.SetError(this.openButton, "Non Decompiled File");
-                            Log("File is not Decompiled");
                             return false;
                         }
 
@@ -141,9 +114,6 @@ namespace Minecraft_Deobfuscator {
                 }
             }
 
-            this.foundFilesLabel.Text = "Found Files: " + FilesFound;
-            this.javaFilesLabel.Text = "Java Files: " + this.javaFiles.Count;
-            this.miscFileLabel.Text = "Misc Files: " + this.miscFiles.Count;
             return true;
         }
 
@@ -161,14 +131,16 @@ namespace Minecraft_Deobfuscator {
         // saveLocation.TextChanged
         // mappingCount.TextChanged
         private void ValidateReady(object sender, EventArgs e) {
-            this.startButton.Enabled = Ready;
+            this.startButton.Enabled = IsReady();
         }
 
         // this.startButton.Click
         // startToolStripMenuItem1.Click
         private void Start(object sender, EventArgs e) {
-            if (!Ready)
+            if (!IsReady()) {
                 return;
+            }
+
             this.progressBar.Value = 0;
             Log("Starting");
             this.bgDeobfuscator.RunWorkerAsync();
@@ -250,7 +222,7 @@ namespace Minecraft_Deobfuscator {
             else {
                 this.mappingFetcher.RunWorkerAsync();
             }
-        }     
+        }
 
         private void DownloadLiveMapping() {
             this.mappingCount.Text = "Mappings: 0";
@@ -266,6 +238,9 @@ namespace Minecraft_Deobfuscator {
             }
         }
 
+        private string mcVersion;
+        private string snapshot;
+        private string mapType;
         private void DownloadMapping() {
             this.mappingCount.Text = "Mappings: 0";
             this.nodeDictionary.Clear();
@@ -278,24 +253,17 @@ namespace Minecraft_Deobfuscator {
                 this.queueDownloadMappings = true;
             }
             else {
-                Logf("Fetching Mapping {0}-{1}", (object) this.snapshot, (object) this.mcVersion);
-                this.mappingDownloader.RunWorkerAsync();
+                Logf("Fetching Mapping {0}-{1}", (object)this.snapshot, (object)this.mcVersion);
+                this.mappingDownloader.RunWorkerAsync(); // run FetchMapping
             }
-        }
-
-        // this.mappingFetcher.DoWork
-        private void FetchVersions(object sender, DoWorkEventArgs e) {
-            Debug.WriteLine("Fetching Mappings");
-            this.mappings = Versions.GetVersions();
-            if (!this.queueFetchMappings) {
-                return;
-            }
-
-            this.queueFetchMappings = false;
-            FetchVersions(null, null);
         }
 
         // mappingDownloader.DoWork
+        private static string StableZipUrl = "http://export.mcpbot.bspk.rs/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
+        private static string SnapshotZipUrl = "http://export.mcpbot.bspk.rs/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
+        private static string LiveFields = "http://export.mcpbot.bspk.rs/fields.csv";
+        private static string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
+        private static string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
         private void FetchMapping(object sender, DoWorkEventArgs e) {
             using (WebClient webClient = new WebClient()) {
                 string address = null;
@@ -313,10 +281,11 @@ namespace Minecraft_Deobfuscator {
                         address = string.Format(StableZipUrl, this.snapshot, this.mcVersion);
                     else if (this.mapType.Equals("snapshot", StringComparison.OrdinalIgnoreCase))
                         address = string.Format(SnapshotZipUrl, this.snapshot, this.mcVersion);
-                    this.zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)));
-                    foreach (ZipArchiveEntry entry in this.zipMapping.Entries) {
-                        Debug.WriteLine("Entry: " + entry);
-                        ParseStream(entry.Open());
+                    using (var zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)))) {
+                        foreach (ZipArchiveEntry entry in zipMapping.Entries) {
+                            Debug.WriteLine("Entry: " + entry);
+                            ParseStream(entry.Open());
+                        }
                     }
                 }
             }
@@ -341,6 +310,18 @@ namespace Minecraft_Deobfuscator {
                     this.nodeDictionary[strArray[0]] = strArray[1];
                 }
             }
+        }
+
+        // this.mappingFetcher.DoWork
+        private void FetchVersions(object sender, DoWorkEventArgs e) {
+            Debug.WriteLine("Fetching Mappings");
+            this.mappings = Versions.GetVersions();
+            if (!this.queueFetchMappings) {
+                return;
+            }
+
+            this.queueFetchMappings = false;
+            FetchVersions(null, null);
         }
 
         private void UpdateSnapshotData(object sender, RunWorkerCompletedEventArgs e) {
@@ -370,33 +351,43 @@ namespace Minecraft_Deobfuscator {
             this.snapshotList.Enabled = true;
         }
 
+        private readonly Stopwatch stopwatch = new Stopwatch();
+        private long hits;
+        private long filesCompleted;
         private void Deobfuscate(object sender, DoWorkEventArgs e) {
             this.hits = 0L;
             this.filesCompleted = 0L;
             this.stopwatch.Reset();
             this.stopwatch.Start();
-            var path = Path.Combine(Directory.CreateDirectory(Path.Combine(this.folderBrowser.SelectedPath, "output")).FullName,
+            var targetDirectory = Directory.CreateDirectory(Path.Combine(this.folderBrowser.SelectedPath, "output"));
+            var path = Path.Combine(targetDirectory.FullName,
                 this.fileDialog.FileName.Substring(this.fileDialog.FileName.LastIndexOf('\\') + 1));
             Debug.WriteLine("Writing to " + path);
-            using (var fileStream = new FileStream(path, FileMode.Create))
-            using (var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create)) {
-                foreach (var miscFile in this.miscFiles) {
-                    var entry = zipArchive.CreateEntry(miscFile.FullName);
-                    CopyZipEntry(new MemoryStream(miscFile.EntryData), entry);
-                    ++this.filesCompleted;
-                    this.bgDeobfuscator.ReportProgress((int) (100.0 * this.filesCompleted / FilesFound));
+            foreach (var miscFile in this.miscFiles) {
+                var targetFile = new FileInfo(Path.Combine(targetDirectory.FullName, miscFile.FullName.Replace("/", "\\")));
+                if (!targetFile.Directory.Exists) {
+                    targetFile.Directory.Create();
                 }
 
-                foreach (var javaFile in this.javaFiles) {
-                    var entry = zipArchive.CreateEntry(javaFile.FullName);
-                    CopyZipEntry(DeobfuscateData(javaFile.EntryData), entry);
-                    ++this.filesCompleted;
-                    this.bgDeobfuscator.ReportProgress((int) (100.0 * this.filesCompleted / FilesFound));
+                File.WriteAllBytes(targetFile.FullName, miscFile.EntryData);
+                ++this.filesCompleted;
+                this.bgDeobfuscator.ReportProgress((int)(100.0 * this.filesCompleted / GetFilesFoundCount()));
+            }
+
+            foreach (var javaFile in this.javaFiles) {
+                var targetFile = new FileInfo(Path.Combine(targetDirectory.FullName, javaFile.FullName.Replace("/", "\\")));
+                if (!targetFile.Directory.Exists) {
+                    targetFile.Directory.Create();
                 }
+
+                File.WriteAllBytes(targetFile.FullName, DeobfuscateData(javaFile.EntryData).ToArray());
+                ++this.filesCompleted;
+                this.bgDeobfuscator.ReportProgress((int)(100.0 * this.filesCompleted / GetFilesFoundCount()));
             }
 
             Debug.WriteLine("Finished");
         }
+
 
         private MemoryStream DeobfuscateData(byte[] byteData) {
             var memoryStream1 = new MemoryStream();
@@ -408,7 +399,7 @@ namespace Minecraft_Deobfuscator {
                     if (node == null) {
                         if (this.nodeDictionary.TryGetValue(key, out node))
                             offset = memoryStream1.Position;
-                        memoryStream1.WriteByte((byte) key);
+                        memoryStream1.WriteByte((byte)key);
                     }
                     else if (node.TryGetValue(key, out node)) {
                         if (node.Value != null) {
@@ -417,15 +408,21 @@ namespace Minecraft_Deobfuscator {
                             memoryStream1.Write(Encoding.ASCII.GetBytes(node.Value), 0, node.Value.Length);
                         }
                         else
-                            memoryStream1.WriteByte((byte) key);
+                            memoryStream1.WriteByte((byte)key);
                     }
                     else
-                        memoryStream1.WriteByte((byte) key);
+                        memoryStream1.WriteByte((byte)key);
                 }
             }
 
             memoryStream1.Seek(0L, SeekOrigin.Begin);
             return memoryStream1;
+        }
+
+        private void Deobfuscate_OnCompleted(object sender, RunWorkerCompletedEventArgs e) {
+            this.stopwatch.Stop();
+            Logf("Replaced {0} in {1:n3} seconds", this.hits, this.stopwatch.ElapsedMilliseconds / 1000.0);
+            Log("Finished");
         }
 
         private static void CopyZipEntry(MemoryStream source, ZipArchiveEntry dest) {

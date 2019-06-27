@@ -10,7 +10,7 @@ namespace Minecraft_Deobfuscator {
         private Button openButton;
         private Button saveTo;
         private FlowLayoutPanel flowLayoutPanel1;
-        private Label fileName;
+        private Label lblFileName;
         private Label saveLocation;
         private ProgressBar progressBar;
         private Button startButton;
@@ -39,6 +39,7 @@ namespace Minecraft_Deobfuscator {
         private TextBox txtLogConsole;
         private ToolStripMenuItem clearLogToolStripMenuItem;
         private BackgroundWorker bgDeobfuscator;
+        private IContainer components;
 
         private void InitializeComponent() {
             this.components = (IContainer)new Container();
@@ -47,7 +48,7 @@ namespace Minecraft_Deobfuscator {
             this.openButton = new Button();
             this.saveTo = new Button();
             this.flowLayoutPanel1 = new FlowLayoutPanel();
-            this.fileName = new Label();
+            this.lblFileName = new Label();
             this.saveLocation = new Label();
             this.progressBar = new ProgressBar();
             this.startButton = new Button();
@@ -102,13 +103,13 @@ namespace Minecraft_Deobfuscator {
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new Size(609, 306);
             this.flowLayoutPanel1.TabIndex = 2;
-            this.fileName.AutoSize = true;
-            this.fileName.Location = new Point(176, 42);
-            this.fileName.Name = "fileName";
-            this.fileName.Size = new Size(26, 13);
-            this.fileName.TabIndex = 3;
-            this.fileName.Text = "File:";
-            this.fileName.TextChanged += new EventHandler(this.ValidateReady);
+            this.lblFileName.AutoSize = true;
+            this.lblFileName.Location = new Point(176, 42);
+            this.lblFileName.Name = "lblFileName";
+            this.lblFileName.Size = new Size(26, 13);
+            this.lblFileName.TabIndex = 3;
+            this.lblFileName.Text = "File:";
+            this.lblFileName.TextChanged += new EventHandler(this.ValidateReady);
             this.saveLocation.AutoSize = true;
             this.saveLocation.Location = new Point(176, 73);
             this.saveLocation.Name = "saveLocation";
@@ -289,7 +290,7 @@ namespace Minecraft_Deobfuscator {
             this.Controls.Add((Control)this.startButton);
             this.Controls.Add((Control)this.progressBar);
             this.Controls.Add((Control)this.saveLocation);
-            this.Controls.Add((Control)this.fileName);
+            this.Controls.Add((Control)this.lblFileName);
             this.Controls.Add((Control)this.flowLayoutPanel1);
             this.Controls.Add((Control)this.saveTo);
             this.Controls.Add((Control)this.openButton);

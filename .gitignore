@@ -2,6 +2,7 @@ bin/
 obj/
 .vs/
 packages/
+test/dec
 
 # =========================
 # Jetbrains Rider
