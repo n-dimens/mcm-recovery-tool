@@ -3,13 +3,12 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Minecraft_Deobfuscator {
-    public partial class Deobfuscator : Form {
+namespace MinecraftModsDeobfuscator {
+    public partial class MainWindow : Form {
         private OpenFileDialog fileDialog;
         private FolderBrowserDialog folderBrowser;
         private Button btnOpen;
         private Button btnSaveTo;
-        private FlowLayoutPanel flowLayoutPanel1;
         private Label lblFileName;
         private Label lblSaveLocation;
         private ProgressBar progressBar;
@@ -28,7 +27,6 @@ namespace Minecraft_Deobfuscator {
         private BackgroundWorker mappingDownloader;
         private ToolStripStatusLabel lblMappingCount;
         private ErrorProvider errorProvider1;
-        private TextBox txtLogConsole;
         private BackgroundWorker bgDeobfuscator;
         private IContainer components;
 
@@ -38,8 +36,6 @@ namespace Minecraft_Deobfuscator {
             this.folderBrowser = new System.Windows.Forms.FolderBrowserDialog();
             this.btnOpen = new System.Windows.Forms.Button();
             this.btnSaveTo = new System.Windows.Forms.Button();
-            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
-            this.txtLogConsole = new System.Windows.Forms.TextBox();
             this.lblFileName = new System.Windows.Forms.Label();
             this.lblSaveLocation = new System.Windows.Forms.Label();
             this.progressBar = new System.Windows.Forms.ProgressBar();
@@ -61,7 +57,7 @@ namespace Minecraft_Deobfuscator {
             this.bgDeobfuscator = new System.ComponentModel.BackgroundWorker();
             this.btnClearLog = new System.Windows.Forms.Button();
             this.btnReloadMappings = new System.Windows.Forms.Button();
-            this.flowLayoutPanel1.SuspendLayout();
+            this.txtLogConsole = new System.Windows.Forms.TextBox();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
             this.SuspendLayout();
@@ -90,26 +86,6 @@ namespace Minecraft_Deobfuscator {
             this.btnSaveTo.Text = "Save To";
             this.btnSaveTo.UseVisualStyleBackColor = true;
             this.btnSaveTo.Click += new System.EventHandler(this.btnSaveTo_OnClick);
-            // 
-            // flowLayoutPanel1
-            // 
-            this.flowLayoutPanel1.Controls.Add(this.txtLogConsole);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(179, 95);
-            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(609, 306);
-            this.flowLayoutPanel1.TabIndex = 2;
-            // 
-            // txtLogConsole
-            // 
-            this.txtLogConsole.AcceptsReturn = true;
-            this.txtLogConsole.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.txtLogConsole.Location = new System.Drawing.Point(0, 0);
-            this.txtLogConsole.Margin = new System.Windows.Forms.Padding(0);
-            this.txtLogConsole.Multiline = true;
-            this.txtLogConsole.Name = "txtLogConsole";
-            this.txtLogConsole.ReadOnly = true;
-            this.txtLogConsole.Size = new System.Drawing.Size(609, 309);
-            this.txtLogConsole.TabIndex = 0;
             // 
             // lblFileName
             // 
@@ -153,7 +129,7 @@ namespace Minecraft_Deobfuscator {
             this.mcVersionLabel.Name = "mcVersionLabel";
             this.mcVersionLabel.Size = new System.Drawing.Size(150, 18);
             this.mcVersionLabel.TabIndex = 7;
-            this.mcVersionLabel.Text = "MC Version";
+            this.mcVersionLabel.Text = "Minecraft Version";
             this.mcVersionLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // cbMinecraftVersions
@@ -218,10 +194,10 @@ namespace Minecraft_Deobfuscator {
             // 
             this.statusStrip1.BackColor = System.Drawing.SystemColors.Control;
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lblMappingCount,
             this.lblFoundFilesCount,
             this.lblJavaFilesCount,
-            this.lblMiscFilesCount,
-            this.lblMappingCount});
+            this.lblMiscFilesCount});
             this.statusStrip1.Location = new System.Drawing.Point(0, 428);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(800, 22);
@@ -231,29 +207,33 @@ namespace Minecraft_Deobfuscator {
             // lblFoundFilesCount
             // 
             this.lblFoundFilesCount.BackColor = System.Drawing.SystemColors.Control;
+            this.lblFoundFilesCount.Margin = new System.Windows.Forms.Padding(8, 0, 0, 2);
             this.lblFoundFilesCount.Name = "lblFoundFilesCount";
-            this.lblFoundFilesCount.Size = new System.Drawing.Size(79, 17);
+            this.lblFoundFilesCount.Size = new System.Drawing.Size(79, 20);
             this.lblFoundFilesCount.Text = "Found Files: 0";
             // 
             // lblJavaFilesCount
             // 
             this.lblJavaFilesCount.BackColor = System.Drawing.SystemColors.Control;
+            this.lblJavaFilesCount.Margin = new System.Windows.Forms.Padding(10, 0, 0, 2);
             this.lblJavaFilesCount.Name = "lblJavaFilesCount";
-            this.lblJavaFilesCount.Size = new System.Drawing.Size(67, 17);
+            this.lblJavaFilesCount.Size = new System.Drawing.Size(67, 20);
             this.lblJavaFilesCount.Text = "Java Files: 0";
             // 
             // lblMiscFilesCount
             // 
             this.lblMiscFilesCount.BackColor = System.Drawing.SystemColors.Control;
+            this.lblMiscFilesCount.Margin = new System.Windows.Forms.Padding(6, 0, 0, 2);
             this.lblMiscFilesCount.Name = "lblMiscFilesCount";
-            this.lblMiscFilesCount.Size = new System.Drawing.Size(70, 17);
+            this.lblMiscFilesCount.Size = new System.Drawing.Size(70, 20);
             this.lblMiscFilesCount.Text = "Misc Files: 0";
             // 
             // lblMappingCount
             // 
             this.lblMappingCount.BackColor = System.Drawing.SystemColors.Control;
+            this.lblMappingCount.Margin = new System.Windows.Forms.Padding(10, 0, 0, 2);
             this.lblMappingCount.Name = "lblMappingCount";
-            this.lblMappingCount.Size = new System.Drawing.Size(108, 17);
+            this.lblMappingCount.Size = new System.Drawing.Size(108, 20);
             this.lblMappingCount.Text = "Mappings Count: 0";
             // 
             // errorProvider1
@@ -284,12 +264,25 @@ namespace Minecraft_Deobfuscator {
             this.btnReloadMappings.UseVisualStyleBackColor = true;
             this.btnReloadMappings.Click += new System.EventHandler(this.btnReloadMappings_OnClick);
             // 
-            // Deobfuscator
+            // txtLogConsole
+            // 
+            this.txtLogConsole.AcceptsReturn = true;
+            this.txtLogConsole.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.txtLogConsole.Location = new System.Drawing.Point(179, 74);
+            this.txtLogConsole.Margin = new System.Windows.Forms.Padding(0);
+            this.txtLogConsole.Multiline = true;
+            this.txtLogConsole.Name = "txtLogConsole";
+            this.txtLogConsole.ReadOnly = true;
+            this.txtLogConsole.Size = new System.Drawing.Size(609, 327);
+            this.txtLogConsole.TabIndex = 17;
+            // 
+            // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.txtLogConsole);
             this.Controls.Add(this.btnReloadMappings);
             this.Controls.Add(this.btnClearLog);
             this.Controls.Add(this.statusStrip1);
@@ -303,16 +296,15 @@ namespace Minecraft_Deobfuscator {
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.lblSaveLocation);
             this.Controls.Add(this.lblFileName);
-            this.Controls.Add(this.flowLayoutPanel1);
             this.Controls.Add(this.btnSaveTo);
             this.Controls.Add(this.btnOpen);
             this.Cursor = System.Windows.Forms.Cursors.Default;
-            this.Name = "Deobfuscator";
-            this.ShowIcon = false;
-            this.Text = "Minecraft Mod Deobfuscator v0.1";
-            this.Load += new System.EventHandler(this.Form_OnLoad);
-            this.flowLayoutPanel1.ResumeLayout(false);
-            this.flowLayoutPanel1.PerformLayout();
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
+            this.MaximizeBox = false;
+            this.Name = "MainWindow";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "Minecraft Mod Disassembler v0.1";
+            this.Load += new System.EventHandler(this.frmMain_OnLoad);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).EndInit();
@@ -331,5 +323,6 @@ namespace Minecraft_Deobfuscator {
 
         private Button btnReloadMappings;
         private Button btnClearLog;
+        private TextBox txtLogConsole;
     }
 }

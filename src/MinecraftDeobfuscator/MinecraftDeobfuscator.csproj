@@ -6,12 +6,12 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{366EF8E0-12BA-4510-86D9-88C3851C91CD}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Minecraft_Deobfuscator</RootNamespace>
-    <AssemblyName>Minecraft Deobfuscator</AssemblyName>
+    <RootNamespace>MinecraftModsDeobfuscator</RootNamespace>
+    <AssemblyName>MinecraftModsDeobfuscator</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <StartupObject>Minecraft_Deobfuscator.Program</StartupObject>
+    <StartupObject>MinecraftModsDeobfuscator.Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -48,14 +48,16 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Deobfuscator.cs">
+    <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Deobfuscator.designer.cs">
-      <DependentUpon>Deobfuscator.cs</DependentUpon>
+    <Compile Include="MainWindow.designer.cs">
+      <DependentUpon>MainWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Node.cs" />
-    <Compile Include="NodeDictionary.cs" />
+    <Compile Include="Domain\Node.cs" />
+    <Compile Include="Domain\NodeDictionary.cs" />
+    <Compile Include="Presentation\IMainWindowView.cs" />
+    <Compile Include="Presentation\MainWindowPresenter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -68,12 +70,12 @@
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Versions.cs" />
-    <Compile Include="ZipInfo.cs" />
+    <Compile Include="Domain\Versions.cs" />
+    <Compile Include="Domain\ZipInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Deobfuscator.resx">
-      <DependentUpon>Deobfuscator.cs</DependentUpon>
+    <EmbeddedResource Include="MainWindow.resx">
+      <DependentUpon>MainWindow.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -88,5 +90,11 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\fernflower.jar">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

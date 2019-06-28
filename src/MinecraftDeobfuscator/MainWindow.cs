@@ -1,10 +1,4 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: Minecraft_Deobfuscator.Deobfuscator
-// Assembly: Minecraft Deobfuscator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: F4BAE0BF-CA2A-447E-86CC-7EDF2FB3D29B
-// Assembly location: E:\business\me\projects\minecraft\Minecraft Deobfuscator\src-bin\Minecraft Deobfuscator.exe
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -15,8 +9,13 @@ using System.Net;
 using System.Text;
 using System.Windows.Forms;
 
-namespace Minecraft_Deobfuscator {
-    public partial class Deobfuscator {
+using MinecraftModsDeobfuscator.Domain;
+using MinecraftModsDeobfuscator.Presentation;
+
+namespace MinecraftModsDeobfuscator {
+    public partial class MainWindow : IMainWindowView {
+        private readonly MainWindowPresenter presenter;
+
         private Dictionary<string, Dictionary<string, string[]>> mappings = new Dictionary<string, Dictionary<string, string[]>>();
         private NodeDictionary nodeDictionary = new NodeDictionary();
         private bool queueFetchMappings;
@@ -27,12 +26,12 @@ namespace Minecraft_Deobfuscator {
         private readonly List<ZipInfo> javaFiles = new List<ZipInfo>();
         private readonly List<ZipInfo> miscFiles = new List<ZipInfo>();
 
-        public Deobfuscator() {
+        public MainWindow() {
+            this.presenter = new MainWindowPresenter(this);
             InitializeComponent();
-            StartPosition = FormStartPosition.CenterScreen;
         }
 
-        private void Form_OnLoad(object sender, EventArgs e) {
+        private void frmMain_OnLoad(object sender, EventArgs e) {
             this.fileDialog.FileName = "";
             this.mappingFetcher.DoWork += FetchVersions;
             this.mappingFetcher.RunWorkerCompleted += UpdateSnapshotData;
@@ -306,57 +305,6 @@ namespace Minecraft_Deobfuscator {
             this.lblMappingCount.Text = "Mappings: " + this.nodeDictionary.Count;
             this.btnStart.Enabled = IsReady();
             UnlockSnapshots();
-        }
-
-        private static NodeDictionary LoadMapping(string mcVersion, string snapshotVersion, string mt, bool isLive) {
-            string StableZipUrl = "http://export.mcpbot.bspk.rs/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
-            string SnapshotZipUrl = "http://export.mcpbot.bspk.rs/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
-            string LiveFields = "http://export.mcpbot.bspk.rs/fields.csv";
-            string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
-            string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
-            var result = new NodeDictionary();
-            using (WebClient webClient = new WebClient()) {
-                string address = null;
-                if (isLive) {
-                    Debug.WriteLine("Entry: Live Fields");
-                    ParseStream(result, new MemoryStream(webClient.DownloadData(LiveFields)));
-                    Debug.WriteLine("Entry: Live Methods");
-                    ParseStream(result, new MemoryStream(webClient.DownloadData(LiveMethods)));
-                    Debug.WriteLine("Entry: Live Params");
-                    ParseStream(result, new MemoryStream(webClient.DownloadData(LiveParams)));
-                    Debug.WriteLine("Mappings: " + result.Count);
-                }
-                else {
-                    if (mt.Equals("stable", StringComparison.OrdinalIgnoreCase))
-                        address = string.Format(StableZipUrl, snapshotVersion, mcVersion);
-                    else if (mt.Equals("snapshot", StringComparison.OrdinalIgnoreCase))
-                        address = string.Format(SnapshotZipUrl, snapshotVersion, mcVersion);
-                    using (var zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)))) {
-                        foreach (ZipArchiveEntry entry in zipMapping.Entries) {
-                            Debug.WriteLine("Entry: " + entry);
-                            ParseStream(result, entry.Open());
-                        }
-                    }
-                }
-            }
-
-            return result;
-        }
-
-        private static void ParseStream(NodeDictionary dictionary, Stream stream) {
-            using (StreamReader streamReader = new StreamReader(stream)) {
-                string str = streamReader.ReadLine();
-                if (!str.Equals("searge,name,side,desc", StringComparison.OrdinalIgnoreCase) &&
-                    !str.Equals("param,name,side", StringComparison.OrdinalIgnoreCase)) {
-                    string[] strArray = str.Split(',');
-                    dictionary[strArray[0]] = strArray[1];
-                }
-
-                while (!streamReader.EndOfStream) {
-                    string[] strArray = streamReader.ReadLine().Split(',');
-                    dictionary[strArray[0]] = strArray[1];
-                }
-            }
         }
 
         // this.mappingFetcher.DoWork

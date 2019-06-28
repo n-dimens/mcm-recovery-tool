@@ -1,12 +1,6 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: Minecraft_Deobfuscator.NodeDictionary
-// Assembly: Minecraft Deobfuscator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: F4BAE0BF-CA2A-447E-86CC-7EDF2FB3D29B
-// Assembly location: E:\business\me\projects\minecraft\Minecraft Deobfuscator\src-bin\Minecraft Deobfuscator.exe
+﻿using System.Collections.Generic;
 
-using System.Collections.Generic;
-
-namespace Minecraft_Deobfuscator {
+namespace MinecraftModsDeobfuscator.Domain {
     internal class NodeDictionary : Dictionary<char, Node> {
         public int RootCount {
             get {

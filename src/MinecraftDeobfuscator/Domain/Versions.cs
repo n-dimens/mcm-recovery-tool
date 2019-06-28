@@ -5,7 +5,7 @@ using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 
-namespace Minecraft_Deobfuscator {
+namespace MinecraftModsDeobfuscator.Domain {
     public class Versions {
         private enum VersionJson {
             Init,

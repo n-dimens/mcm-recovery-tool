@@ -1,14 +1,7 @@
-﻿// Decompiled with JetBrains decompiler
-// Type: Minecraft_Deobfuscator.ZipInfo
-// Assembly: Minecraft Deobfuscator, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
-// MVID: F4BAE0BF-CA2A-447E-86CC-7EDF2FB3D29B
-// Assembly location: E:\business\me\projects\minecraft\Minecraft Deobfuscator\src-bin\Minecraft Deobfuscator.exe
-
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
 
-namespace Minecraft_Deobfuscator
-{
+namespace MinecraftModsDeobfuscator.Domain {
   internal class ZipInfo
   {
     public string FullName { get; private set; }
