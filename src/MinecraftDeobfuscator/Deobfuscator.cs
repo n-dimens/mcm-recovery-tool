@@ -18,10 +18,12 @@ using System.Windows.Forms;
 namespace Minecraft_Deobfuscator {
     public partial class Deobfuscator {
         private Dictionary<string, Dictionary<string, string[]>> mappings = new Dictionary<string, Dictionary<string, string[]>>();
-        private readonly NodeDictionary nodeDictionary = new NodeDictionary();
+        private NodeDictionary nodeDictionary = new NodeDictionary();
         private bool queueFetchMappings;
         private bool queueDownloadMappings;
         private bool downloadLiveMappings;
+
+        // 
         private readonly List<ZipInfo> javaFiles = new List<ZipInfo>();
         private readonly List<ZipInfo> miscFiles = new List<ZipInfo>();
 
@@ -61,14 +63,12 @@ namespace Minecraft_Deobfuscator {
             return false;
         }
 
-        // openButton.Click
-        // startToolStripMenuItem.Click
-        private void SelectTarget(object sender, EventArgs e) {
+        private void btnOpen_OnClick(object sender, EventArgs e) {
             this.progressBar.Value = 0;
             this.errorProvider1.Clear();
-            this.foundFilesLabel.Text = "Found Files: 0";
-            this.javaFilesLabel.Text = "Java Files: 0";
-            this.miscFileLabel.Text = "Misc Files: 0";
+            this.lblFoundFilesCount.Text = "Found Files: 0";
+            this.lblJavaFilesCount.Text = "Java Files: 0";
+            this.lblMiscFilesCount.Text = "Misc Files: 0";
             if (this.fileDialog.ShowDialog() != DialogResult.OK) {
                 return;
             }
@@ -80,19 +80,20 @@ namespace Minecraft_Deobfuscator {
                     this.lblFileName.Text = "File: " + this.fileDialog.FileName.Substring(this.fileDialog.FileName.LastIndexOf('\\') + 1);
                     if (this.folderBrowser.SelectedPath == "") {
                         this.folderBrowser.SelectedPath = this.fileDialog.FileName.Substring(0, this.fileDialog.FileName.LastIndexOf('\\'));
-                        this.saveLocation.Text = "Save To: " + this.folderBrowser.SelectedPath + "\\output";
+                        this.lblSaveLocation.Text = "Save To: " + this.folderBrowser.SelectedPath + "\\output";
                     }
                 }
                 else {
-                    this.errorProvider1.SetError(this.openButton, "Non Decompiled File");
+                    this.errorProvider1.SetError(this.btnOpen, "Non Decompiled File");
                     Log("File is not Decompiled");
                     this.lblFileName.Text = "File:";
                 }
             }
 
-            this.foundFilesLabel.Text = "Found Files: " + GetFilesFoundCount();
-            this.javaFilesLabel.Text = "Java Files: " + this.javaFiles.Count;
-            this.miscFileLabel.Text = "Misc Files: " + this.miscFiles.Count;
+            this.lblFoundFilesCount.Text = "Found Files: " + GetFilesFoundCount();
+            this.lblJavaFilesCount.Text = "Java Files: " + this.javaFiles.Count;
+            this.lblMiscFilesCount.Text = "Misc Files: " + this.miscFiles.Count;
+            this.btnStart.Enabled = IsReady();
         }
 
         private bool ParseInputZip(Stream stream) {
@@ -117,26 +118,18 @@ namespace Minecraft_Deobfuscator {
             return true;
         }
 
-        // saveTo.Click
-        // exitToolStripMenuItem.Click
-        private void SelectDestination(object sender, EventArgs e) {
+        private void btnSaveTo_OnClick(object sender, EventArgs e) {
             this.progressBar.Value = 0;
             this.errorProvider1.Clear();
-            if (this.folderBrowser.ShowDialog() != DialogResult.OK)
+            if (this.folderBrowser.ShowDialog() != DialogResult.OK) {
                 return;
-            this.saveLocation.Text = "Save To: " + this.folderBrowser.SelectedPath + "\\output";
+            }
+
+            this.lblSaveLocation.Text = "Save To: " + this.folderBrowser.SelectedPath + "\\output";
+            this.btnStart.Enabled = IsReady();
         }
 
-        // fileName.TextChanged
-        // saveLocation.TextChanged
-        // mappingCount.TextChanged
-        private void ValidateReady(object sender, EventArgs e) {
-            this.startButton.Enabled = IsReady();
-        }
-
-        // this.startButton.Click
-        // startToolStripMenuItem1.Click
-        private void Start(object sender, EventArgs e) {
+        private void btnStart_OnClick(object sender, EventArgs e) {
             if (!IsReady()) {
                 return;
             }
@@ -146,70 +139,61 @@ namespace Minecraft_Deobfuscator {
             this.bgDeobfuscator.RunWorkerAsync();
         }
 
-        // mcVersionList.SelectedIndexChanged
-        private void MCVersionChanged(object sender, EventArgs e) {
+        private void cbMinecraftVersions_OnSelectedChanged(object sender, EventArgs e) {
             this.progressBar.Value = 0;
             this.errorProvider1.Clear();
             LockSnapshots();
-            this.startButton.Enabled = false;
+            this.btnStart.Enabled = false;
             this.mappingLabel.Visible = this.snapshotLabel.Visible =
-                this.mapTypeList.Visible = this.snapshotList.Visible = this.mcVersionList.SelectedIndex > 0;
-            if (this.mcVersionList.SelectedIndex > 0) {
-                this.mapTypeList.Items.Clear();
-                Debug.WriteLine("MCVersion: " + this.mcVersionList.SelectedItem);
-                this.mapTypeList.Items.AddRange(
-                    new List<string>(this.mappings[this.mcVersionList.SelectedItem.ToString()].Keys).ToArray());
-                this.mapTypeList.SelectedIndex = 0;
+                this.cbMappingTypes.Visible = this.cbSnapshots.Visible = this.cbMinecraftVersions.SelectedIndex > 0;
+            if (this.cbMinecraftVersions.SelectedIndex > 0) {
+                this.cbMappingTypes.Items.Clear();
+                Debug.WriteLine("MCVersion: " + this.cbMinecraftVersions.SelectedItem);
+                this.cbMappingTypes.Items.AddRange(
+                    new List<string>(this.mappings[this.cbMinecraftVersions.SelectedItem.ToString()].Keys).ToArray());
+                this.cbMappingTypes.SelectedIndex = 0;
             }
-            else if (this.mcVersionList.SelectedIndex == 0) {
+            else if (this.cbMinecraftVersions.SelectedIndex == 0) {
                 Debug.WriteLine("Loading Live");
                 DownloadLiveMapping();
             }
             else {
                 this.nodeDictionary.Clear();
-                this.mappingCount.Text = "Mappings: 0";
+                this.lblMappingCount.Text = "Mappings: 0";
+                this.btnStart.Enabled = IsReady();
             }
         }
 
-        // .reloadMappingsToolStripMenuItem.Click
-        private void Reload(object sender, EventArgs e) {
-            this.startButton.Enabled = false;
+        private void btnReloadMappings_OnClick(object sender, EventArgs e) {
+            this.btnStart.Enabled = false;
             this.progressBar.Value = 0;
-            this.mcVersionList.SelectedIndex = -1;
+            this.cbMinecraftVersions.SelectedIndex = -1;
             this.errorProvider1.Clear();
             ClearLog();
             LoadVersions();
         }
 
-        // checkForUpdatesToolStripMenuItem.Click
-        private void CheckForUpdates(object sender, EventArgs e) {
-            Process.Start("chrome.exe", "https://www.minecraftforum.net/forums/mapping-and-modding-java-edition/minecraft-tools/2849175");
-        }
-
-        // mapTypeList.SelectedIndexChanged
-        private void MapTypeChanged(object sender, EventArgs e) {
+        private void cbMappingTypes_OnSelectedChanged(object sender, EventArgs e) {
             this.progressBar.Value = 0;
             this.errorProvider1.Clear();
             LockSnapshots();
-            this.startButton.Enabled = false;
-            this.snapshotList.Items.Clear();
-            this.snapshotList.Items.AddRange(
-                this.mappings[this.mcVersionList.SelectedItem.ToString()][this.mapTypeList.SelectedItem.ToString()]);
-            this.snapshotList.SelectedIndex = 0;
+            this.btnStart.Enabled = false;
+            this.cbSnapshots.Items.Clear();
+            this.cbSnapshots.Items.AddRange(
+                this.mappings[this.cbMinecraftVersions.SelectedItem.ToString()][this.cbMappingTypes.SelectedItem.ToString()]);
+            this.cbSnapshots.SelectedIndex = 0;
         }
 
-        // snapshotList.SelectedIndexChanged
-        private void SnapshotChanged(object sender, EventArgs e) {
+        private void cbSnapshots_OnSelectedChanged(object sender, EventArgs e) {
             this.progressBar.Value = 0;
             this.errorProvider1.Clear();
             LockSnapshots();
-            this.startButton.Enabled = false;
+            this.btnStart.Enabled = false;
             Debug.WriteLine("Snapshot Changed");
             DownloadMapping();
         }
 
-        // clearLogToolStripMenuItem.Click
-        private void ClearLog(object sender, EventArgs e) {
+        private void btnClearLog_OnClick(object sender, EventArgs e) {
             ClearLog();
         }
 
@@ -225,7 +209,8 @@ namespace Minecraft_Deobfuscator {
         }
 
         private void DownloadLiveMapping() {
-            this.mappingCount.Text = "Mappings: 0";
+            this.lblMappingCount.Text = "Mappings: 0";
+            this.btnStart.Enabled = IsReady();
             this.nodeDictionary.Clear();
             if (this.mappingDownloader.IsBusy) {
                 Debug.WriteLine("Queue Download Live Mapping");
@@ -242,11 +227,12 @@ namespace Minecraft_Deobfuscator {
         private string snapshot;
         private string mapType;
         private void DownloadMapping() {
-            this.mappingCount.Text = "Mappings: 0";
+            this.lblMappingCount.Text = "Mappings: 0";
+            this.btnStart.Enabled = IsReady();
             this.nodeDictionary.Clear();
-            this.mcVersion = this.mcVersionList.SelectedItem.ToString();
-            this.snapshot = this.snapshotList.SelectedItem.ToString();
-            this.mapType = this.mapTypeList.SelectedItem.ToString();
+            this.mcVersion = this.cbMinecraftVersions.SelectedItem.ToString();
+            this.snapshot = this.cbSnapshots.SelectedItem.ToString();
+            this.mapType = this.cbMappingTypes.SelectedItem.ToString();
             this.downloadLiveMappings = false;
             if (this.mappingDownloader.IsBusy) {
                 Debug.WriteLine("Queue Download Mapping");
@@ -265,6 +251,7 @@ namespace Minecraft_Deobfuscator {
         private static string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
         private static string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
         private void FetchMapping(object sender, DoWorkEventArgs e) {
+            //this.nodeDictionary = LoadMapping(this.mcVersion, this.snapshot, this.mapType, this.downloadLiveMappings);
             using (WebClient webClient = new WebClient()) {
                 string address = null;
                 if (this.downloadLiveMappings) {
@@ -290,8 +277,10 @@ namespace Minecraft_Deobfuscator {
                 }
             }
 
-            if (!this.queueDownloadMappings)
+            if (!this.queueDownloadMappings) {
                 return;
+            }
+
             this.queueDownloadMappings = false;
             FetchMapping(null, null);
         }
@@ -312,6 +301,64 @@ namespace Minecraft_Deobfuscator {
             }
         }
 
+        private void MappingFetched(object sender, RunWorkerCompletedEventArgs e) {
+            Debug.WriteLine("Finished");
+            this.lblMappingCount.Text = "Mappings: " + this.nodeDictionary.Count;
+            this.btnStart.Enabled = IsReady();
+            UnlockSnapshots();
+        }
+
+        private static NodeDictionary LoadMapping(string mcVersion, string snapshotVersion, string mt, bool isLive) {
+            string StableZipUrl = "http://export.mcpbot.bspk.rs/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
+            string SnapshotZipUrl = "http://export.mcpbot.bspk.rs/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
+            string LiveFields = "http://export.mcpbot.bspk.rs/fields.csv";
+            string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
+            string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
+            var result = new NodeDictionary();
+            using (WebClient webClient = new WebClient()) {
+                string address = null;
+                if (isLive) {
+                    Debug.WriteLine("Entry: Live Fields");
+                    ParseStream(result, new MemoryStream(webClient.DownloadData(LiveFields)));
+                    Debug.WriteLine("Entry: Live Methods");
+                    ParseStream(result, new MemoryStream(webClient.DownloadData(LiveMethods)));
+                    Debug.WriteLine("Entry: Live Params");
+                    ParseStream(result, new MemoryStream(webClient.DownloadData(LiveParams)));
+                    Debug.WriteLine("Mappings: " + result.Count);
+                }
+                else {
+                    if (mt.Equals("stable", StringComparison.OrdinalIgnoreCase))
+                        address = string.Format(StableZipUrl, snapshotVersion, mcVersion);
+                    else if (mt.Equals("snapshot", StringComparison.OrdinalIgnoreCase))
+                        address = string.Format(SnapshotZipUrl, snapshotVersion, mcVersion);
+                    using (var zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)))) {
+                        foreach (ZipArchiveEntry entry in zipMapping.Entries) {
+                            Debug.WriteLine("Entry: " + entry);
+                            ParseStream(result, entry.Open());
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static void ParseStream(NodeDictionary dictionary, Stream stream) {
+            using (StreamReader streamReader = new StreamReader(stream)) {
+                string str = streamReader.ReadLine();
+                if (!str.Equals("searge,name,side,desc", StringComparison.OrdinalIgnoreCase) &&
+                    !str.Equals("param,name,side", StringComparison.OrdinalIgnoreCase)) {
+                    string[] strArray = str.Split(',');
+                    dictionary[strArray[0]] = strArray[1];
+                }
+
+                while (!streamReader.EndOfStream) {
+                    string[] strArray = streamReader.ReadLine().Split(',');
+                    dictionary[strArray[0]] = strArray[1];
+                }
+            }
+        }
+
         // this.mappingFetcher.DoWork
         private void FetchVersions(object sender, DoWorkEventArgs e) {
             Debug.WriteLine("Fetching Mappings");
@@ -326,37 +373,30 @@ namespace Minecraft_Deobfuscator {
 
         private void UpdateSnapshotData(object sender, RunWorkerCompletedEventArgs e) {
             LockSnapshots();
-            this.mcVersionList.Items.Clear();
-            this.mcVersionList.Items.Add("Semi-Live");
-            this.mcVersionList.Items.AddRange(this.mappings.Keys.ToArray());
-            this.mcVersionList.SelectedIndex = 0; // OnChanged run DownloadLiveMapping
+            this.cbMinecraftVersions.Items.Clear();
+            this.cbMinecraftVersions.Items.Add("Semi-Live");
+            this.cbMinecraftVersions.Items.AddRange(this.mappings.Keys.ToArray());
+            this.cbMinecraftVersions.SelectedIndex = 0; // OnChanged run DownloadLiveMapping
             Debug.WriteLine("Finished");
-        }
-
-        private void MappingFetched(object sender, RunWorkerCompletedEventArgs e) {
-            Debug.WriteLine("Finished");
-            this.mappingCount.Text = "Mappings: " + this.nodeDictionary.Count;
-            UnlockSnapshots();
         }
 
         private void LockSnapshots() {
-            this.mcVersionList.Enabled = false;
-            this.mapTypeList.Enabled = false;
-            this.snapshotList.Enabled = false;
+            this.cbMinecraftVersions.Enabled = false;
+            this.cbMappingTypes.Enabled = false;
+            this.cbSnapshots.Enabled = false;
         }
 
         private void UnlockSnapshots() {
-            this.mcVersionList.Enabled = true;
-            this.mapTypeList.Enabled = true;
-            this.snapshotList.Enabled = true;
+            this.cbMinecraftVersions.Enabled = true;
+            this.cbMappingTypes.Enabled = true;
+            this.cbSnapshots.Enabled = true;
         }
 
         private readonly Stopwatch stopwatch = new Stopwatch();
         private long hits;
-        private long filesCompleted;
         private void Deobfuscate(object sender, DoWorkEventArgs e) {
             this.hits = 0L;
-            this.filesCompleted = 0L;
+            var processedFilesCount = 0L;
             this.stopwatch.Reset();
             this.stopwatch.Start();
             var targetDirectory = Directory.CreateDirectory(Path.Combine(this.folderBrowser.SelectedPath, "output"));
@@ -370,8 +410,8 @@ namespace Minecraft_Deobfuscator {
                 }
 
                 File.WriteAllBytes(targetFile.FullName, miscFile.EntryData);
-                ++this.filesCompleted;
-                this.bgDeobfuscator.ReportProgress((int)(100.0 * this.filesCompleted / GetFilesFoundCount()));
+                processedFilesCount++;
+                this.bgDeobfuscator.ReportProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
             }
 
             foreach (var javaFile in this.javaFiles) {
@@ -381,8 +421,8 @@ namespace Minecraft_Deobfuscator {
                 }
 
                 File.WriteAllBytes(targetFile.FullName, DeobfuscateData(javaFile.EntryData).ToArray());
-                ++this.filesCompleted;
-                this.bgDeobfuscator.ReportProgress((int)(100.0 * this.filesCompleted / GetFilesFoundCount()));
+                processedFilesCount++;
+                this.bgDeobfuscator.ReportProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
             }
 
             Debug.WriteLine("Finished");
@@ -397,8 +437,10 @@ namespace Minecraft_Deobfuscator {
                 while (memoryStream2.Length - memoryStream2.Position > 0L) {
                     var key = Convert.ToChar(memoryStream2.ReadByte());
                     if (node == null) {
-                        if (this.nodeDictionary.TryGetValue(key, out node))
+                        if (this.nodeDictionary.TryGetValue(key, out node)) {
                             offset = memoryStream1.Position;
+                        }
+
                         memoryStream1.WriteByte((byte)key);
                     }
                     else if (node.TryGetValue(key, out node)) {

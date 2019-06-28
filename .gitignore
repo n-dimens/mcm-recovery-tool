@@ -2,7 +2,8 @@ bin/
 obj/
 .vs/
 packages/
-test/dec
+test/
+!test/fernflower.jar
 
 # =========================
 # Jetbrains Rider
