@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -16,15 +17,10 @@ namespace MinecraftModsDeobfuscator {
     public partial class MainWindow : IMainWindowView {
         private readonly MainWindowPresenter presenter;
 
-        private Dictionary<string, Dictionary<string, string[]>> mappings = new Dictionary<string, Dictionary<string, string[]>>();
         private NodeDictionary nodeDictionary = new NodeDictionary();
         private bool queueFetchMappings;
         private bool queueDownloadMappings;
         private bool downloadLiveMappings;
-
-        // 
-        private readonly List<ZipInfo> javaFiles = new List<ZipInfo>();
-        private readonly List<ZipInfo> miscFiles = new List<ZipInfo>();
 
         public MainWindow() {
             this.presenter = new MainWindowPresenter(this);
@@ -41,11 +37,6 @@ namespace MinecraftModsDeobfuscator {
             this.bgDeobfuscator.RunWorkerCompleted += Deobfuscate_OnCompleted;
             this.bgDeobfuscator.ProgressChanged += BgDeobfuscator_ProgressChanged;
             LoadVersions();
-        }
-
-        // only for report progress
-        private int GetFilesFoundCount() {
-            return this.javaFiles.Count + this.miscFiles.Count;
         }
 
         private bool IsReady() {
@@ -72,10 +63,8 @@ namespace MinecraftModsDeobfuscator {
                 return;
             }
 
-            this.javaFiles.Clear();
-            this.miscFiles.Clear();
             using (var stream = this.fileDialog.OpenFile()) {
-                if (ParseInputZip(stream)) {
+                if (this.presenter.ParseInputZip(stream)) {
                     this.lblFileName.Text = "File: " + this.fileDialog.FileName.Substring(this.fileDialog.FileName.LastIndexOf('\\') + 1);
                     if (this.folderBrowser.SelectedPath == "") {
                         this.folderBrowser.SelectedPath = this.fileDialog.FileName.Substring(0, this.fileDialog.FileName.LastIndexOf('\\'));
@@ -89,32 +78,10 @@ namespace MinecraftModsDeobfuscator {
                 }
             }
 
-            this.lblFoundFilesCount.Text = "Found Files: " + GetFilesFoundCount();
-            this.lblJavaFilesCount.Text = "Java Files: " + this.javaFiles.Count;
-            this.lblMiscFilesCount.Text = "Misc Files: " + this.miscFiles.Count;
+            this.lblFoundFilesCount.Text = "Found Files: " + this.presenter.GetFilesFoundCount();
+            this.lblJavaFilesCount.Text = "Java Files: " + this.presenter.JavaFiles.Count;
+            this.lblMiscFilesCount.Text = "Misc Files: " + this.presenter.MiscellaneousFiles.Count;
             this.btnStart.Enabled = IsReady();
-        }
-
-        private bool ParseInputZip(Stream stream) {
-            using (var zipArchive = new ZipArchive(stream, ZipArchiveMode.Read)) {
-                foreach (var entry in zipArchive.Entries) {
-                    if (entry.Name != "") {
-                        if (entry.FullName.EndsWith(".class")) {
-                            Debug.WriteLine("Class File Found");
-                            return false;
-                        }
-
-                        if (entry.FullName.EndsWith(".java")) {
-                            this.javaFiles.Add(new ZipInfo(entry));
-                        }
-                        else {
-                            this.miscFiles.Add(new ZipInfo(entry));
-                        }
-                    }
-                }
-            }
-
-            return true;
         }
 
         private void btnSaveTo_OnClick(object sender, EventArgs e) {
@@ -147,9 +114,8 @@ namespace MinecraftModsDeobfuscator {
                 this.cbMappingTypes.Visible = this.cbSnapshots.Visible = this.cbMinecraftVersions.SelectedIndex > 0;
             if (this.cbMinecraftVersions.SelectedIndex > 0) {
                 this.cbMappingTypes.Items.Clear();
-                Debug.WriteLine("MCVersion: " + this.cbMinecraftVersions.SelectedItem);
-                this.cbMappingTypes.Items.AddRange(
-                    new List<string>(this.mappings[this.cbMinecraftVersions.SelectedItem.ToString()].Keys).ToArray());
+                Debug.WriteLine("MCVersion: " + GetSelectedMinecraftVersion());
+                this.cbMappingTypes.Items.AddRange(this.presenter.GetMappingTypesList(GetSelectedMinecraftVersion()).ToArray());
                 this.cbMappingTypes.SelectedIndex = 0;
             }
             else if (this.cbMinecraftVersions.SelectedIndex == 0) {
@@ -178,8 +144,9 @@ namespace MinecraftModsDeobfuscator {
             LockSnapshots();
             this.btnStart.Enabled = false;
             this.cbSnapshots.Items.Clear();
-            this.cbSnapshots.Items.AddRange(
-                this.mappings[this.cbMinecraftVersions.SelectedItem.ToString()][this.cbMappingTypes.SelectedItem.ToString()]);
+            var minecraftVersion = GetSelectedMinecraftVersion();
+            var mappingType = GetSelectedMappingType();
+            this.cbSnapshots.Items.AddRange(this.presenter.GetSnapshotsList(minecraftVersion, mappingType).ToArray());
             this.cbSnapshots.SelectedIndex = 0;
         }
 
@@ -229,9 +196,9 @@ namespace MinecraftModsDeobfuscator {
             this.lblMappingCount.Text = "Mappings: 0";
             this.btnStart.Enabled = IsReady();
             this.nodeDictionary.Clear();
-            this.mcVersion = this.cbMinecraftVersions.SelectedItem.ToString();
+            this.mcVersion = GetSelectedMinecraftVersion();
             this.snapshot = this.cbSnapshots.SelectedItem.ToString();
-            this.mapType = this.cbMappingTypes.SelectedItem.ToString();
+            this.mapType = GetSelectedMappingType();
             this.downloadLiveMappings = false;
             if (this.mappingDownloader.IsBusy) {
                 Debug.WriteLine("Queue Download Mapping");
@@ -310,7 +277,7 @@ namespace MinecraftModsDeobfuscator {
         // this.mappingFetcher.DoWork
         private void FetchVersions(object sender, DoWorkEventArgs e) {
             Debug.WriteLine("Fetching Mappings");
-            this.mappings = Versions.GetVersions();
+            this.presenter.LoadVersions();
             if (!this.queueFetchMappings) {
                 return;
             }
@@ -323,7 +290,7 @@ namespace MinecraftModsDeobfuscator {
             LockSnapshots();
             this.cbMinecraftVersions.Items.Clear();
             this.cbMinecraftVersions.Items.Add("Semi-Live");
-            this.cbMinecraftVersions.Items.AddRange(this.mappings.Keys.ToArray());
+            this.cbMinecraftVersions.Items.AddRange(this.presenter.GetVersionList().ToArray());
             this.cbMinecraftVersions.SelectedIndex = 0; // OnChanged run DownloadLiveMapping
             Debug.WriteLine("Finished");
         }
@@ -351,7 +318,7 @@ namespace MinecraftModsDeobfuscator {
             var path = Path.Combine(targetDirectory.FullName,
                 this.fileDialog.FileName.Substring(this.fileDialog.FileName.LastIndexOf('\\') + 1));
             Debug.WriteLine("Writing to " + path);
-            foreach (var miscFile in this.miscFiles) {
+            foreach (var miscFile in this.presenter.MiscellaneousFiles) {
                 var targetFile = new FileInfo(Path.Combine(targetDirectory.FullName, miscFile.FullName.Replace("/", "\\")));
                 if (!targetFile.Directory.Exists) {
                     targetFile.Directory.Create();
@@ -359,10 +326,10 @@ namespace MinecraftModsDeobfuscator {
 
                 File.WriteAllBytes(targetFile.FullName, miscFile.EntryData);
                 processedFilesCount++;
-                this.bgDeobfuscator.ReportProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
+                this.bgDeobfuscator.ReportProgress((int)(100.0 * processedFilesCount / this.presenter.GetFilesFoundCount()));
             }
 
-            foreach (var javaFile in this.javaFiles) {
+            foreach (var javaFile in this.presenter.JavaFiles) {
                 var targetFile = new FileInfo(Path.Combine(targetDirectory.FullName, javaFile.FullName.Replace("/", "\\")));
                 if (!targetFile.Directory.Exists) {
                     targetFile.Directory.Create();
@@ -370,7 +337,7 @@ namespace MinecraftModsDeobfuscator {
 
                 File.WriteAllBytes(targetFile.FullName, DeobfuscateData(javaFile.EntryData).ToArray());
                 processedFilesCount++;
-                this.bgDeobfuscator.ReportProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
+                this.bgDeobfuscator.ReportProgress((int)(100.0 * processedFilesCount / this.presenter.GetFilesFoundCount()));
             }
 
             Debug.WriteLine("Finished");
@@ -415,6 +382,8 @@ namespace MinecraftModsDeobfuscator {
             Log("Finished");
         }
 
+
+        // todo: why unused? my bur or not?
         private static void CopyZipEntry(MemoryStream source, ZipArchiveEntry dest) {
             using (source) {
                 using (Stream stream = dest.Open()) {
@@ -440,6 +409,14 @@ namespace MinecraftModsDeobfuscator {
 
         private void ClearLog() {
             this.txtLogConsole.Text = "";
+        }
+
+        private string GetSelectedMinecraftVersion() {
+            return this.cbMinecraftVersions.SelectedItem.ToString();
+        }
+
+        private string GetSelectedMappingType() {
+            return this.cbMappingTypes.SelectedItem.ToString();
         }
     }
 }
