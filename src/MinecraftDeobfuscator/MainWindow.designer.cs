@@ -13,7 +13,6 @@ namespace MinecraftModsDeobfuscator {
         private Label lblSaveLocation;
         private ProgressBar progressBar;
         private Button btnStart;
-        private BackgroundWorker bgMappingFetcher;
         private Label mcVersionLabel;
         private ComboBox cbMinecraftVersions;
         private ComboBox cbMappingTypes;
@@ -21,13 +20,8 @@ namespace MinecraftModsDeobfuscator {
         private ComboBox cbSnapshots;
         private Label snapshotLabel;
         private StatusStrip statusStrip1;
-        private ToolStripStatusLabel lblFoundFilesCount;
-        private ToolStripStatusLabel lblJavaFilesCount;
-        private ToolStripStatusLabel lblMiscFilesCount;
-        private BackgroundWorker bgMappingDownloader;
         private ToolStripStatusLabel lblMappingCount;
         private ErrorProvider errorProvider1;
-        private BackgroundWorker bgDeobfuscator;
         private IContainer components;
 
         private void InitializeComponent() {
@@ -40,7 +34,6 @@ namespace MinecraftModsDeobfuscator {
             this.lblSaveLocation = new System.Windows.Forms.Label();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.btnStart = new System.Windows.Forms.Button();
-            this.bgMappingFetcher = new System.ComponentModel.BackgroundWorker();
             this.mcVersionLabel = new System.Windows.Forms.Label();
             this.cbMinecraftVersions = new System.Windows.Forms.ComboBox();
             this.cbMappingTypes = new System.Windows.Forms.ComboBox();
@@ -48,13 +41,8 @@ namespace MinecraftModsDeobfuscator {
             this.cbSnapshots = new System.Windows.Forms.ComboBox();
             this.snapshotLabel = new System.Windows.Forms.Label();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.lblFoundFilesCount = new System.Windows.Forms.ToolStripStatusLabel();
-            this.lblJavaFilesCount = new System.Windows.Forms.ToolStripStatusLabel();
-            this.lblMiscFilesCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblMappingCount = new System.Windows.Forms.ToolStripStatusLabel();
-            this.bgMappingDownloader = new System.ComponentModel.BackgroundWorker();
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
-            this.bgDeobfuscator = new System.ComponentModel.BackgroundWorker();
             this.btnClearLog = new System.Windows.Forms.Button();
             this.btnReloadMappings = new System.Windows.Forms.Button();
             this.txtLogConsole = new System.Windows.Forms.TextBox();
@@ -194,39 +182,12 @@ namespace MinecraftModsDeobfuscator {
             // 
             this.statusStrip1.BackColor = System.Drawing.SystemColors.Control;
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.lblMappingCount,
-            this.lblFoundFilesCount,
-            this.lblJavaFilesCount,
-            this.lblMiscFilesCount});
+            this.lblMappingCount});
             this.statusStrip1.Location = new System.Drawing.Point(0, 428);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(800, 22);
             this.statusStrip1.TabIndex = 14;
             this.statusStrip1.Text = "statusStrip1";
-            // 
-            // lblFoundFilesCount
-            // 
-            this.lblFoundFilesCount.BackColor = System.Drawing.SystemColors.Control;
-            this.lblFoundFilesCount.Margin = new System.Windows.Forms.Padding(8, 0, 0, 2);
-            this.lblFoundFilesCount.Name = "lblFoundFilesCount";
-            this.lblFoundFilesCount.Size = new System.Drawing.Size(79, 20);
-            this.lblFoundFilesCount.Text = "Found Files: 0";
-            // 
-            // lblJavaFilesCount
-            // 
-            this.lblJavaFilesCount.BackColor = System.Drawing.SystemColors.Control;
-            this.lblJavaFilesCount.Margin = new System.Windows.Forms.Padding(10, 0, 0, 2);
-            this.lblJavaFilesCount.Name = "lblJavaFilesCount";
-            this.lblJavaFilesCount.Size = new System.Drawing.Size(67, 20);
-            this.lblJavaFilesCount.Text = "Java Files: 0";
-            // 
-            // lblMiscFilesCount
-            // 
-            this.lblMiscFilesCount.BackColor = System.Drawing.SystemColors.Control;
-            this.lblMiscFilesCount.Margin = new System.Windows.Forms.Padding(6, 0, 0, 2);
-            this.lblMiscFilesCount.Name = "lblMiscFilesCount";
-            this.lblMiscFilesCount.Size = new System.Drawing.Size(70, 20);
-            this.lblMiscFilesCount.Text = "Misc Files: 0";
             // 
             // lblMappingCount
             // 
@@ -239,10 +200,6 @@ namespace MinecraftModsDeobfuscator {
             // errorProvider1
             // 
             this.errorProvider1.ContainerControl = this;
-            // 
-            // bgDeobfuscator
-            // 
-            this.bgDeobfuscator.WorkerReportsProgress = true;
             // 
             // btnClearLog
             // 

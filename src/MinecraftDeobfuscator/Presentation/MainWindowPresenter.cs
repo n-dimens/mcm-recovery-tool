@@ -30,6 +30,12 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
         public DirectoryInfo TargetDirectory { get; private set; }
 
+        public bool IsVersionsLoadingCompleted { get; private set; } = true;
+
+        public bool IsMappingsLoadingCompleted { get; private set; } = true;
+
+        public bool IsDeobfuscateCompleted { get; private set; } = true;
+
         public event EventHandler<int> ReportDeobfuscateProgress;
 
         public MainWindowPresenter(IMainWindowView view) {
@@ -41,42 +47,25 @@ namespace MinecraftModsDeobfuscator.Presentation {
         }
 
         public void LoadVersions() {
-            this.mappings = Versions.GetVersions();
+            IsVersionsLoadingCompleted = false;
+            var task = new Task(() => { this.mappings = Versions.GetVersions(); });
+            task.ContinueWith(t => {
+                IsVersionsLoadingCompleted = true;
+                this.view.UpdateSnapshotData();
+            });
+
+            task.Start();
         }
 
         public void SetTargetDirectory(string path) {
             TargetDirectory = new DirectoryInfo(Path.Combine(path, "output"));
         }
-       
-        public bool ParseInputZip(string filePath) {
+
+        public void SetInputFile(string filePath) {
             ModFile = new FileInfo(filePath);
             if (TargetDirectory == null) {
                 SetTargetDirectory(ModFile.DirectoryName);
             }
-
-
-            this.javaFiles.Clear();
-            this.miscFiles.Clear();
-            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-            using (var zipArchive = new ZipArchive(fs, ZipArchiveMode.Read)) {
-                foreach (var entry in zipArchive.Entries) {
-                    if (entry.Name != "") {
-                        //if (entry.FullName.EndsWith(".class")) {
-                        //    Debug.WriteLine("Class File Found");
-                        //    return false;
-                        //}
-
-                        if (entry.FullName.EndsWith(".java")) {
-                            this.javaFiles.Add(new ZipInfo(entry));
-                        }
-                        else {
-                            this.miscFiles.Add(new ZipInfo(entry));
-                        }
-                    }
-                }
-            }
-
-            return true;
         }
 
         public int GetFilesFoundCount() {
@@ -101,16 +90,66 @@ namespace MinecraftModsDeobfuscator.Presentation {
             ParseInputZip(Path.Combine(TargetDirectory.FullName, ModFile.Name));
         }
 
+        private bool ParseInputZip(string filePath) {
+            this.javaFiles.Clear();
+            this.miscFiles.Clear();
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            using (var zipArchive = new ZipArchive(fs, ZipArchiveMode.Read)) {
+                foreach (var entry in zipArchive.Entries) {
+                    if (entry.Name != "") {
+                        if (entry.FullName.EndsWith(".java")) {
+                            this.javaFiles.Add(new ZipInfo(entry));
+                        }
+                        else {
+                            this.miscFiles.Add(new ZipInfo(entry));
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
         private static string StableZipUrl = "http://export.mcpbot.bspk.rs/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
         private static string SnapshotZipUrl = "http://export.mcpbot.bspk.rs/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
         private static string LiveFields = "http://export.mcpbot.bspk.rs/fields.csv";
         private static string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
         private static string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
-        public void LoadMapping(string mcVersion, string mapType, string snapshot, bool isDownloadLiveMappings) {
-            this.nodeDictionary.Clear();
-            using (WebClient webClient = new WebClient()) {
-                string address = null;
-                if (isDownloadLiveMappings) {
+        public void LoadMapping(string mcVersion, string mapType, string snapshot) {
+            IsMappingsLoadingCompleted = false;
+            var task = new Task(() => {
+                this.nodeDictionary.Clear();
+                using (WebClient webClient = new WebClient()) {
+                    string address = null;
+                    if (mapType.Equals("stable", StringComparison.OrdinalIgnoreCase)) {
+                        address = string.Format(StableZipUrl, snapshot, mcVersion);
+                    }
+                    else if (mapType.Equals("snapshot", StringComparison.OrdinalIgnoreCase)) {
+                        address = string.Format(SnapshotZipUrl, snapshot, mcVersion);
+                    }
+
+                    using (var zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)))) {
+                        foreach (ZipArchiveEntry entry in zipMapping.Entries) {
+                            Debug.WriteLine("Entry: " + entry);
+                            ParseStream(entry.Open());
+                        }
+                    }
+                }
+            });
+
+            task.ContinueWith(t => {
+                IsMappingsLoadingCompleted = true;
+                this.view.MappingFetched();
+            });
+
+            task.Start();
+        }
+
+        public void LoadLiveMapping() {
+            IsMappingsLoadingCompleted = false;
+            var task = new Task(() => {
+                this.nodeDictionary.Clear();
+                using (WebClient webClient = new WebClient()) {
                     Debug.WriteLine("Entry: Live Fields");
                     ParseStream(new MemoryStream(webClient.DownloadData(LiveFields)));
                     Debug.WriteLine("Entry: Live Methods");
@@ -119,19 +158,14 @@ namespace MinecraftModsDeobfuscator.Presentation {
                     ParseStream(new MemoryStream(webClient.DownloadData(LiveParams)));
                     Debug.WriteLine("Mappings: " + this.nodeDictionary.Count);
                 }
-                else {
-                    if (mapType.Equals("stable", StringComparison.OrdinalIgnoreCase))
-                        address = string.Format(StableZipUrl, snapshot, mcVersion);
-                    else if (mapType.Equals("snapshot", StringComparison.OrdinalIgnoreCase))
-                        address = string.Format(SnapshotZipUrl, snapshot, mcVersion);
-                    using (var zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)))) {
-                        foreach (ZipArchiveEntry entry in zipMapping.Entries) {
-                            Debug.WriteLine("Entry: " + entry);
-                            ParseStream(entry.Open());
-                        }
-                    }
-                }
-            }
+            });
+
+            task.ContinueWith(t => {
+                IsMappingsLoadingCompleted = true;
+                this.view.MappingFetched();
+            });
+
+            task.Start();
         }
 
         private void ParseStream(Stream stream) {
@@ -160,39 +194,47 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
         //private long hits;
         public void Deobfuscate() {
-            var processedFilesCount = 0L;
-            if (!TargetDirectory.Exists) {
-                TargetDirectory.Create();
-            }
-
-            Disassemly();
-
-            Debug.WriteLine($"Writing to {TargetDirectory.FullName}");
-            foreach (var miscFile in MiscellaneousFiles) {
-                var targetFile = new FileInfo(Path.Combine(TargetDirectory.FullName, miscFile.FullName.Replace("/", "\\")));
-                if (!targetFile.Directory.Exists) {
-                    targetFile.Directory.Create();
+            IsDeobfuscateCompleted = false;
+            var task = new Task(() => {
+                var processedFilesCount = 0L;
+                if (!TargetDirectory.Exists) {
+                    TargetDirectory.Create();
                 }
 
-                File.WriteAllBytes(targetFile.FullName, miscFile.EntryData);
-                processedFilesCount++;
-                OnReportDeobfuscateProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
-                // this.bgDeobfuscator.ReportProgress();
-            }
+                Disassemly();
 
-            foreach (var javaFile in JavaFiles) {
-                var targetFile = new FileInfo(Path.Combine(TargetDirectory.FullName, javaFile.FullName.Replace("/", "\\")));
-                if (!targetFile.Directory.Exists) {
-                    targetFile.Directory.Create();
+                Debug.WriteLine($"Writing to {TargetDirectory.FullName}");
+                foreach (var miscFile in MiscellaneousFiles) {
+                    var targetFile = new FileInfo(Path.Combine(TargetDirectory.FullName, miscFile.FullName.Replace("/", "\\")));
+                    if (!targetFile.Directory.Exists) {
+                        targetFile.Directory.Create();
+                    }
+
+                    File.WriteAllBytes(targetFile.FullName, miscFile.EntryData);
+                    processedFilesCount++;
+                    OnReportDeobfuscateProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
                 }
 
-                File.WriteAllBytes(targetFile.FullName, DeobfuscateData(javaFile.EntryData).ToArray());
-                processedFilesCount++;
-                OnReportDeobfuscateProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
-                //this.bgDeobfuscator.ReportProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
-            }
+                foreach (var javaFile in JavaFiles) {
+                    var targetFile = new FileInfo(Path.Combine(TargetDirectory.FullName, javaFile.FullName.Replace("/", "\\")));
+                    if (!targetFile.Directory.Exists) {
+                        targetFile.Directory.Create();
+                    }
 
-            Debug.WriteLine("Finished");
+                    File.WriteAllBytes(targetFile.FullName, DeobfuscateData(javaFile.EntryData).ToArray());
+                    processedFilesCount++;
+                    OnReportDeobfuscateProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
+                }
+
+                Debug.WriteLine("Finished");
+            });
+
+            task.ContinueWith(t => {
+                IsDeobfuscateCompleted = true;
+                this.view.Deobfuscate_OnCompleted();
+            });
+
+            task.Start();
         }
 
         private MemoryStream DeobfuscateData(byte[] byteData) {
