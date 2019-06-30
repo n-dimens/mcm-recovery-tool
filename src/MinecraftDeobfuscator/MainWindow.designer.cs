@@ -13,7 +13,7 @@ namespace MinecraftModsDeobfuscator {
         private Label lblSaveLocation;
         private ProgressBar progressBar;
         private Button btnStart;
-        private BackgroundWorker mappingFetcher;
+        private BackgroundWorker bgMappingFetcher;
         private Label mcVersionLabel;
         private ComboBox cbMinecraftVersions;
         private ComboBox cbMappingTypes;
@@ -24,7 +24,7 @@ namespace MinecraftModsDeobfuscator {
         private ToolStripStatusLabel lblFoundFilesCount;
         private ToolStripStatusLabel lblJavaFilesCount;
         private ToolStripStatusLabel lblMiscFilesCount;
-        private BackgroundWorker mappingDownloader;
+        private BackgroundWorker bgMappingDownloader;
         private ToolStripStatusLabel lblMappingCount;
         private ErrorProvider errorProvider1;
         private BackgroundWorker bgDeobfuscator;
@@ -40,7 +40,7 @@ namespace MinecraftModsDeobfuscator {
             this.lblSaveLocation = new System.Windows.Forms.Label();
             this.progressBar = new System.Windows.Forms.ProgressBar();
             this.btnStart = new System.Windows.Forms.Button();
-            this.mappingFetcher = new System.ComponentModel.BackgroundWorker();
+            this.bgMappingFetcher = new System.ComponentModel.BackgroundWorker();
             this.mcVersionLabel = new System.Windows.Forms.Label();
             this.cbMinecraftVersions = new System.Windows.Forms.ComboBox();
             this.cbMappingTypes = new System.Windows.Forms.ComboBox();
@@ -52,7 +52,7 @@ namespace MinecraftModsDeobfuscator {
             this.lblJavaFilesCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblMiscFilesCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.lblMappingCount = new System.Windows.Forms.ToolStripStatusLabel();
-            this.mappingDownloader = new System.ComponentModel.BackgroundWorker();
+            this.bgMappingDownloader = new System.ComponentModel.BackgroundWorker();
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.bgDeobfuscator = new System.ComponentModel.BackgroundWorker();
             this.btnClearLog = new System.Windows.Forms.Button();
