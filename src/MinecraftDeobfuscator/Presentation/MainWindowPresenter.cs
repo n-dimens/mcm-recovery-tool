@@ -18,9 +18,9 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
         private readonly List<ZipInfo> miscFiles;
 
-        private Dictionary<string, Dictionary<string, string[]>> mappings = new Dictionary<string, Dictionary<string, string[]>>();
-
         private Mapping mapping;
+
+        private Versions versionsManager;
 
         public IReadOnlyList<ZipInfo> JavaFiles { get; }
 
@@ -42,12 +42,19 @@ namespace MinecraftModsDeobfuscator.Presentation {
             this.mapping = new Mapping();
             this.mapping.LoadingCompleted += Mapping_LoadingCompleted;
             this.mapping.LiveLoadingCompleted += Mapping_LoadingCompleted;
+            this.versionsManager = new Versions();
+            this.versionsManager.LoadingCompleted += VersionsManager_LoadingCompleted;
 
             this.javaFiles = new List<ZipInfo>();
             this.miscFiles = new List<ZipInfo>();
             this.view = view;
             JavaFiles = new ReadOnlyCollection<ZipInfo>(this.javaFiles);
             MiscellaneousFiles = new ReadOnlyCollection<ZipInfo>(this.miscFiles);
+        }
+
+        private void VersionsManager_LoadingCompleted(object sender, EventArgs e) {
+            IsVersionsLoadingCompleted = true;
+            this.view.UpdateSnapshotData();
         }
 
         private void Mapping_LoadingCompleted(object sender, EventArgs e) {
@@ -57,13 +64,7 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
         public void LoadVersions() {
             IsVersionsLoadingCompleted = false;
-            var task = new Task(() => { this.mappings = Versions.GetVersions(); });
-            task.ContinueWith(t => {
-                IsVersionsLoadingCompleted = true;
-                this.view.UpdateSnapshotData();
-            });
-
-            task.Start();
+            this.versionsManager.LoadVersions();
         }
 
         public void SetTargetDirectory(string path) {
@@ -82,15 +83,15 @@ namespace MinecraftModsDeobfuscator.Presentation {
         }
 
         public IReadOnlyList<string> GetVersionList() {
-            return new ReadOnlyCollection<string>(this.mappings.Keys.ToList());
+            return this.versionsManager.GetVersionList();
         }
 
         public IReadOnlyList<string> GetMappingTypesList(string minecraftVersion) {
-            return new ReadOnlyCollection<string>(this.mappings[minecraftVersion].Keys.ToList());
+            return this.versionsManager.GetMappingTypesList(minecraftVersion);
         }
 
         public IReadOnlyList<string> GetSnapshotsList(string minecraftVersion, string mappingType) {
-            return new ReadOnlyCollection<string>(this.mappings[minecraftVersion][mappingType]);
+            return this.versionsManager.GetSnapshotsList(minecraftVersion, mappingType);
         }
 
         public void Disassemly() {
