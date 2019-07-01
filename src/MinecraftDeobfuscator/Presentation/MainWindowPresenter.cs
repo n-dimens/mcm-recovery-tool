@@ -20,7 +20,7 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
         private Dictionary<string, Dictionary<string, string[]>> mappings = new Dictionary<string, Dictionary<string, string[]>>();
 
-        private NodeDictionary nodeDictionary = new NodeDictionary();
+        private Mapping mapping;
 
         public IReadOnlyList<ZipInfo> JavaFiles { get; }
 
@@ -39,11 +39,20 @@ namespace MinecraftModsDeobfuscator.Presentation {
         public event EventHandler<int> ReportDeobfuscateProgress;
 
         public MainWindowPresenter(IMainWindowView view) {
+            this.mapping = new Mapping();
+            this.mapping.LoadingCompleted += Mapping_LoadingCompleted;
+            this.mapping.LiveLoadingCompleted += Mapping_LoadingCompleted;
+
             this.javaFiles = new List<ZipInfo>();
             this.miscFiles = new List<ZipInfo>();
             this.view = view;
             JavaFiles = new ReadOnlyCollection<ZipInfo>(this.javaFiles);
             MiscellaneousFiles = new ReadOnlyCollection<ZipInfo>(this.miscFiles);
+        }
+
+        private void Mapping_LoadingCompleted(object sender, EventArgs e) {
+            IsMappingsLoadingCompleted = true;
+            this.view.MappingFetched();
         }
 
         public void LoadVersions() {
@@ -110,86 +119,22 @@ namespace MinecraftModsDeobfuscator.Presentation {
             return true;
         }
 
-        private static string StableZipUrl = "http://export.mcpbot.bspk.rs/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
-        private static string SnapshotZipUrl = "http://export.mcpbot.bspk.rs/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
-        private static string LiveFields = "http://export.mcpbot.bspk.rs/fields.csv";
-        private static string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
-        private static string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
         public void LoadMapping(string mcVersion, string mapType, string snapshot) {
             IsMappingsLoadingCompleted = false;
-            var task = new Task(() => {
-                this.nodeDictionary.Clear();
-                using (WebClient webClient = new WebClient()) {
-                    string address = null;
-                    if (mapType.Equals("stable", StringComparison.OrdinalIgnoreCase)) {
-                        address = string.Format(StableZipUrl, snapshot, mcVersion);
-                    }
-                    else if (mapType.Equals("snapshot", StringComparison.OrdinalIgnoreCase)) {
-                        address = string.Format(SnapshotZipUrl, snapshot, mcVersion);
-                    }
-
-                    using (var zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)))) {
-                        foreach (ZipArchiveEntry entry in zipMapping.Entries) {
-                            Debug.WriteLine("Entry: " + entry);
-                            ParseStream(entry.Open());
-                        }
-                    }
-                }
-            });
-
-            task.ContinueWith(t => {
-                IsMappingsLoadingCompleted = true;
-                this.view.MappingFetched();
-            });
-
-            task.Start();
+            this.mapping.LoadMapping(mcVersion, mapType, snapshot);
         }
 
         public void LoadLiveMapping() {
             IsMappingsLoadingCompleted = false;
-            var task = new Task(() => {
-                this.nodeDictionary.Clear();
-                using (WebClient webClient = new WebClient()) {
-                    Debug.WriteLine("Entry: Live Fields");
-                    ParseStream(new MemoryStream(webClient.DownloadData(LiveFields)));
-                    Debug.WriteLine("Entry: Live Methods");
-                    ParseStream(new MemoryStream(webClient.DownloadData(LiveMethods)));
-                    Debug.WriteLine("Entry: Live Params");
-                    ParseStream(new MemoryStream(webClient.DownloadData(LiveParams)));
-                    Debug.WriteLine("Mappings: " + this.nodeDictionary.Count);
-                }
-            });
-
-            task.ContinueWith(t => {
-                IsMappingsLoadingCompleted = true;
-                this.view.MappingFetched();
-            });
-
-            task.Start();
-        }
-
-        private void ParseStream(Stream stream) {
-            using (StreamReader streamReader = new StreamReader(stream)) {
-                string str = streamReader.ReadLine();
-                if (!str.Equals("searge,name,side,desc", StringComparison.OrdinalIgnoreCase) &&
-                    !str.Equals("param,name,side", StringComparison.OrdinalIgnoreCase)) {
-                    string[] strArray = str.Split(',');
-                    this.nodeDictionary[strArray[0]] = strArray[1];
-                }
-
-                while (!streamReader.EndOfStream) {
-                    string[] strArray = streamReader.ReadLine().Split(',');
-                    this.nodeDictionary[strArray[0]] = strArray[1];
-                }
-            }
+            this.mapping.LoadLiveMapping();
         }
 
         public int GetNodeDictionarySize() {
-            return this.nodeDictionary.Count;
+            return this.mapping.GetNodeDictionarySize();
         }
 
         public bool IsNodeDictionaryEmpty() {
-            return this.nodeDictionary.Count == 0;
+            return this.mapping.IsNodeDictionaryEmpty();
         }
 
         //private long hits;
@@ -245,7 +190,7 @@ namespace MinecraftModsDeobfuscator.Presentation {
                 while (memoryStream2.Length - memoryStream2.Position > 0L) {
                     var key = Convert.ToChar(memoryStream2.ReadByte());
                     if (node == null) {
-                        if (this.nodeDictionary.TryGetValue(key, out node)) {
+                        if (this.mapping.TryGetValue(key, out node)) {
                             offset = memoryStream1.Position;
                         }
 
