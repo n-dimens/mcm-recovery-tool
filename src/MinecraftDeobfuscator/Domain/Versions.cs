@@ -14,14 +14,16 @@ namespace MinecraftModsDeobfuscator.Domain {
     public class Versions {
         private static string VersionJsonUrl = "http://export.mcpbot.bspk.rs/versions.json";
 
-        private enum VersionJson {
-            Init,
-            
-            MCVersion,
-            
-            MapType,
-            
+        private enum VersionsNodeType {
+            Error = -1,
+
+            Root,
+
             Version,
+
+            ReleaseType,
+
+            BuildNumber,
         }
 
         private Dictionary<string, Dictionary<string, string[]>> mappings = new Dictionary<string, Dictionary<string, string[]>>();
@@ -45,7 +47,7 @@ namespace MinecraftModsDeobfuscator.Domain {
             return new ReadOnlyCollection<string>(this.mappings[minecraftVersion].Keys.ToList());
         }
 
-        public IReadOnlyList<string> GetSnapshotsList(string minecraftVersion, string mappingType) {
+        public IReadOnlyList<string> GetBuildList(string minecraftVersion, string mappingType) {
             return new ReadOnlyCollection<string>(this.mappings[minecraftVersion][mappingType]);
         }
 
@@ -57,39 +59,51 @@ namespace MinecraftModsDeobfuscator.Domain {
                 versionsFileContent = Encoding.UTF8.GetString(webClient.DownloadData(VersionJsonUrl));
             }
 
-            var jsonTextReader = new JsonTextReader(new StringReader(versionsFileContent));
-            var versionJson = VersionJson.Init;
-            string index1 = null;
-            string index2 = null;
-            string str = null;
-            var stringList = new List<string>();
-            while (jsonTextReader.Read()) {
-                if (jsonTextReader.Value != null) {
-                    switch (versionJson) {
-                        case VersionJson.MCVersion:
-                            this.mappings[index1 = jsonTextReader.Value.ToString()] = new Dictionary<string, string[]>();
+            var nodeReader = new JsonTextReader(new StringReader(versionsFileContent));
+            var currentNodeType = VersionsNodeType.Root;
+            string mcVersion = null;
+            string mapTypeName = null;
+            var buildList = new List<string>();
+            while (nodeReader.Read()) {
+                if (nodeReader.Value != null) {
+                    switch (currentNodeType) {
+                        case VersionsNodeType.Version:
+                            mcVersion = nodeReader.Value.ToString();
+                            this.mappings[mcVersion] = new Dictionary<string, string[]>();
                             break;
-                        case VersionJson.MapType:
-                            index2 = jsonTextReader.Value.ToString();
+                        case VersionsNodeType.ReleaseType:
+                            mapTypeName = nodeReader.Value.ToString();
                             break;
-                        case VersionJson.Version:
-                            stringList.Add(str = jsonTextReader.Value.ToString());
+                        case VersionsNodeType.BuildNumber:
+                            buildList.Add(nodeReader.Value.ToString());
                             break;
                     }
+
+                    continue;
                 }
-                else if (jsonTextReader.TokenType == JsonToken.StartObject)
-                    ++versionJson;
-                else if (jsonTextReader.TokenType == JsonToken.StartArray)
-                    ++versionJson;
-                else if (jsonTextReader.TokenType == JsonToken.EndObject)
-                    --versionJson;
-                else if (jsonTextReader.TokenType == JsonToken.EndArray) {
-                    stringList.Sort(((a, b) => -a.CompareTo(b)));
-                    this.mappings[index1][index2] = stringList.ToArray();
-                    stringList.Clear();
-                    --versionJson;
+
+                if (nodeReader.TokenType == JsonToken.EndArray) {
+                    this.mappings[mcVersion][mapTypeName] = buildList.ToArray();
+                    buildList.Clear();
+                }
+
+                currentNodeType = SwitchState(currentNodeType, nodeReader.TokenType);
+                if (currentNodeType == VersionsNodeType.Error) {
+                    throw new InvalidOperationException("Unexpected state change.");
                 }
             }
+        }
+
+        private VersionsNodeType SwitchState(VersionsNodeType currentState, JsonToken token) {
+            if (token == JsonToken.StartObject || token == JsonToken.StartArray) {
+                return currentState + 1;
+            }
+
+            if (token == JsonToken.EndObject || token == JsonToken.EndArray) {
+                return currentState - 1;
+            }
+
+            return VersionsNodeType.Error;
         }
 
         private void OnLoadingCompleted() {
@@ -98,6 +112,5 @@ namespace MinecraftModsDeobfuscator.Domain {
                 temp(this, EventArgs.Empty);
             }
         }
-
     }
 }

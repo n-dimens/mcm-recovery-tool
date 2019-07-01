@@ -157,8 +157,14 @@ namespace MinecraftModsDeobfuscator {
             this.cbSnapshots.Items.Clear();
             var minecraftVersion = GetSelectedMinecraftVersion();
             var mappingType = GetSelectedMappingType();
-            this.cbSnapshots.Items.AddRange(this.presenter.GetSnapshotsList(minecraftVersion, mappingType).ToArray());
-            this.cbSnapshots.SelectedIndex = 0;
+            var buildsList = this.presenter.GetBuildList(minecraftVersion, mappingType);
+            if (buildsList.Any()) {
+                this.cbSnapshots.Items.AddRange(buildsList.ToArray());
+                this.cbSnapshots.SelectedIndex = 0;
+            }
+            else {
+                UnlockLists();
+            }
         }
 
         private void cbSnapshots_OnSelectedChanged(object sender, EventArgs e) {

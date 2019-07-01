@@ -98,8 +98,8 @@ namespace MinecraftModsDeobfuscator.Presentation {
             return this.versionsManager.GetMappingTypesList(minecraftVersion);
         }
 
-        public IReadOnlyList<string> GetSnapshotsList(string minecraftVersion, string mappingType) {
-            return this.versionsManager.GetSnapshotsList(minecraftVersion, mappingType);
+        public IReadOnlyList<string> GetBuildList(string minecraftVersion, string releaseType) {
+            return this.versionsManager.GetBuildList(minecraftVersion, releaseType);
         }
 
         public int GetNodeDictionarySize() {
