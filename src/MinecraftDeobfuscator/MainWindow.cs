@@ -23,7 +23,7 @@ namespace MinecraftModsDeobfuscator {
 
         private bool IsReady() {
             var isLoadingCompleted = this.presenter.IsVersionsLoadingCompleted && this.presenter.IsMappingsLoadingCompleted && this.presenter.IsDeobfuscateCompleted;
-            if (isLoadingCompleted && !this.presenter.IsNodeDictionaryEmpty()) {
+            if (isLoadingCompleted && !this.presenter.IsMappingEmpty()) {
                 var fileName = this.presenter.ModFile?.FullName;
                 if (!string.IsNullOrEmpty(fileName)) {
                     return !string.IsNullOrEmpty(this.presenter.TargetDirectory?.FullName);
@@ -33,9 +33,9 @@ namespace MinecraftModsDeobfuscator {
             return false;
         }
 
-        public void UpdateSnapshotData() {
+        public void UpdateMapping() {
             if (InvokeRequired) {
-                Invoke(new TaskCompleted(UpdateSnapshotData));
+                Invoke(new TaskCompleted(UpdateMapping));
             }
             else {
                 this.cbMinecraftVersions.Items.Clear();
@@ -79,7 +79,7 @@ namespace MinecraftModsDeobfuscator {
 
             this.progressBar.Value = 0;
             this.btnStart.Enabled = false;
-            this.btnReloadMappings.Enabled = false;
+            this.btnReloadMapping.Enabled = false;
             Log("Starting");
             this.stopwatch.Reset();
             this.stopwatch.Start();
@@ -102,7 +102,7 @@ namespace MinecraftModsDeobfuscator {
             }
             else {
                 this.btnStart.Enabled = IsReady();
-                this.btnReloadMappings.Enabled = true;
+                this.btnReloadMapping.Enabled = true;
                 Logf("Replaced in {0:n3} seconds", this.stopwatch.ElapsedMilliseconds / 1000.0);
                 Log("Finished");
             }
@@ -112,10 +112,10 @@ namespace MinecraftModsDeobfuscator {
             this.progressBar.Value = 0;
             this.btnStart.Enabled = false;
             var isMinecraftVersionSelected = this.cbMinecraftVersions.SelectedIndex > 0;
-            this.mappingLabel.Visible = isMinecraftVersionSelected;
-            this.cbMappingTypes.Visible = isMinecraftVersionSelected;
-            this.snapshotLabel.Visible = isMinecraftVersionSelected;
-            this.cbSnapshots.Visible = isMinecraftVersionSelected;
+            this.lblReleaseType.Visible = isMinecraftVersionSelected;
+            this.cbReleaseTypes.Visible = isMinecraftVersionSelected;
+            this.lblBuilds.Visible = isMinecraftVersionSelected;
+            this.cbBuilds.Visible = isMinecraftVersionSelected;
             this.lblMappingCount.Text = "Mappings: 0";
             ClearLog();
             LoadVersions();
@@ -128,18 +128,18 @@ namespace MinecraftModsDeobfuscator {
         private void cbMinecraftVersions_OnSelectedChanged(object sender, EventArgs e) {
             this.progressBar.Value = 0;
             this.btnStart.Enabled = false;
-            this.btnReloadMappings.Enabled = false;
+            this.btnReloadMapping.Enabled = false;
             var isFixedVersionSelected = this.cbMinecraftVersions.SelectedIndex > 0;
-            this.mappingLabel.Visible = isFixedVersionSelected;
-            this.cbMappingTypes.Visible = isFixedVersionSelected;
-            this.snapshotLabel.Visible = isFixedVersionSelected;
-            this.cbSnapshots.Visible = isFixedVersionSelected;
+            this.lblReleaseType.Visible = isFixedVersionSelected;
+            this.cbReleaseTypes.Visible = isFixedVersionSelected;
+            this.lblBuilds.Visible = isFixedVersionSelected;
+            this.cbBuilds.Visible = isFixedVersionSelected;
             LockLists();
             if (isFixedVersionSelected) {
-                this.cbMappingTypes.Items.Clear();
+                this.cbReleaseTypes.Items.Clear();
                 Debug.WriteLine("MCVersion: " + GetSelectedMinecraftVersion());
-                this.cbMappingTypes.Items.AddRange(this.presenter.GetMappingTypesList(GetSelectedMinecraftVersion()).ToArray());
-                this.cbMappingTypes.SelectedIndex = 0;
+                this.cbReleaseTypes.Items.AddRange(this.presenter.GetReleaseTypesList(GetSelectedMinecraftVersion()).ToArray());
+                this.cbReleaseTypes.SelectedIndex = 0;
             }
             else if (this.cbMinecraftVersions.SelectedIndex == 0) {
                 // semi-live
@@ -149,36 +149,36 @@ namespace MinecraftModsDeobfuscator {
             }
         }
 
-        private void cbMappingTypes_OnSelectedChanged(object sender, EventArgs e) {
+        private void cbReleaseTypes_OnSelectedChanged(object sender, EventArgs e) {
             this.progressBar.Value = 0;
             LockLists();
             this.btnStart.Enabled = false;
-            this.btnReloadMappings.Enabled = false;
-            this.cbSnapshots.Items.Clear();
-            var minecraftVersion = GetSelectedMinecraftVersion();
-            var mappingType = GetSelectedMappingType();
-            var buildsList = this.presenter.GetBuildList(minecraftVersion, mappingType);
+            this.btnReloadMapping.Enabled = false;
+            this.cbBuilds.Items.Clear();
+            var version = GetSelectedMinecraftVersion();
+            var releaseType = GetSelectedReleaseType();
+            var buildsList = this.presenter.GetBuildList(version, releaseType);
             if (buildsList.Any()) {
-                this.cbSnapshots.Items.AddRange(buildsList.ToArray());
-                this.cbSnapshots.SelectedIndex = 0;
+                this.cbBuilds.Items.AddRange(buildsList.ToArray());
+                this.cbBuilds.SelectedIndex = 0;
             }
             else {
                 UnlockLists();
             }
         }
 
-        private void cbSnapshots_OnSelectedChanged(object sender, EventArgs e) {
+        private void cbBuilds_OnSelectedChanged(object sender, EventArgs e) {
             this.progressBar.Value = 0;
             LockLists();
             this.btnStart.Enabled = false;
-            this.btnReloadMappings.Enabled = false;
-            Debug.WriteLine("Snapshot Changed");
+            this.btnReloadMapping.Enabled = false;
+            Debug.WriteLine("Build number Changed");
             DownloadMapping();
         }
 
         private void LoadVersions() {
             LockLists();
-            this.btnReloadMappings.Enabled = false;
+            this.btnReloadMapping.Enabled = false;
             Debug.WriteLine("Fetching Mappings");
             this.presenter.LoadVersions();
         }
@@ -193,10 +193,10 @@ namespace MinecraftModsDeobfuscator {
             this.lblMappingCount.Text = "Mappings: 0";
             this.btnStart.Enabled = IsReady();
             var mcVersion = GetSelectedMinecraftVersion();
-            var mapType = GetSelectedMappingType();
-            var snapshot = this.cbSnapshots.SelectedItem.ToString();
-            Logf("Fetching Mapping {0}-{1}", snapshot, mcVersion);
-            this.presenter.LoadMapping(mcVersion, mapType, snapshot);
+            var releaseType = GetSelectedReleaseType();
+            var buildNumber = this.cbBuilds.SelectedItem.ToString();
+            Logf("Fetching Mapping {0}-{1}", buildNumber, mcVersion);
+            this.presenter.LoadMapping(mcVersion, releaseType, buildNumber);
         }
 
         public void MappingFetched() {
@@ -205,24 +205,24 @@ namespace MinecraftModsDeobfuscator {
             }
             else {
                 Debug.WriteLine("Finished");
-                this.lblMappingCount.Text = "Mappings: " + this.presenter.GetNodeDictionarySize();
+                this.lblMappingCount.Text = "Mappings: " + this.presenter.GetMappingSize();
                 this.btnStart.Enabled = IsReady();
                 UnlockLists();
-                this.btnReloadMappings.Enabled = true;
+                this.btnReloadMapping.Enabled = true;
                 this.cbMinecraftVersions.Enabled = true;
             }           
         }
 
         private void LockLists() {
             this.cbMinecraftVersions.Enabled = false;
-            this.cbMappingTypes.Enabled = false;
-            this.cbSnapshots.Enabled = false;
+            this.cbReleaseTypes.Enabled = false;
+            this.cbBuilds.Enabled = false;
         }
 
         private void UnlockLists() {
             this.cbMinecraftVersions.Enabled = true;
-            this.cbMappingTypes.Enabled = true;
-            this.cbSnapshots.Enabled = true;
+            this.cbReleaseTypes.Enabled = true;
+            this.cbBuilds.Enabled = true;
         }
 
         private void Log(string msg) {
@@ -241,8 +241,8 @@ namespace MinecraftModsDeobfuscator {
             return this.cbMinecraftVersions.SelectedItem.ToString();
         }
 
-        private string GetSelectedMappingType() {
-            return this.cbMappingTypes.SelectedItem.ToString();
+        private string GetSelectedReleaseType() {
+            return this.cbReleaseTypes.SelectedItem.ToString();
         }
     }
 }

@@ -15,10 +15,10 @@ namespace MinecraftModsDeobfuscator {
         private Button btnStart;
         private Label mcVersionLabel;
         private ComboBox cbMinecraftVersions;
-        private ComboBox cbMappingTypes;
-        private Label mappingLabel;
-        private ComboBox cbSnapshots;
-        private Label snapshotLabel;
+        private ComboBox cbReleaseTypes;
+        private Label lblReleaseType;
+        private ComboBox cbBuilds;
+        private Label lblBuilds;
         private StatusStrip statusStrip1;
         private ToolStripStatusLabel lblMappingCount;
         private ErrorProvider errorProvider1;
@@ -36,15 +36,15 @@ namespace MinecraftModsDeobfuscator {
             this.btnStart = new System.Windows.Forms.Button();
             this.mcVersionLabel = new System.Windows.Forms.Label();
             this.cbMinecraftVersions = new System.Windows.Forms.ComboBox();
-            this.cbMappingTypes = new System.Windows.Forms.ComboBox();
-            this.mappingLabel = new System.Windows.Forms.Label();
-            this.cbSnapshots = new System.Windows.Forms.ComboBox();
-            this.snapshotLabel = new System.Windows.Forms.Label();
+            this.cbReleaseTypes = new System.Windows.Forms.ComboBox();
+            this.lblReleaseType = new System.Windows.Forms.Label();
+            this.cbBuilds = new System.Windows.Forms.ComboBox();
+            this.lblBuilds = new System.Windows.Forms.Label();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.lblMappingCount = new System.Windows.Forms.ToolStripStatusLabel();
             this.errorProvider1 = new System.Windows.Forms.ErrorProvider(this.components);
             this.btnClearLog = new System.Windows.Forms.Button();
-            this.btnReloadMappings = new System.Windows.Forms.Button();
+            this.btnReloadMapping = new System.Windows.Forms.Button();
             this.txtLogConsole = new System.Windows.Forms.TextBox();
             this.statusStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.errorProvider1)).BeginInit();
@@ -132,51 +132,51 @@ namespace MinecraftModsDeobfuscator {
             this.cbMinecraftVersions.TabIndex = 8;
             this.cbMinecraftVersions.SelectedIndexChanged += new System.EventHandler(this.cbMinecraftVersions_OnSelectedChanged);
             // 
-            // cbMappingTypes
+            // cbReleaseTypes
             // 
-            this.cbMappingTypes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbMappingTypes.DropDownWidth = 150;
-            this.cbMappingTypes.Enabled = false;
-            this.cbMappingTypes.FormattingEnabled = true;
-            this.cbMappingTypes.Location = new System.Drawing.Point(13, 140);
-            this.cbMappingTypes.Name = "cbMappingTypes";
-            this.cbMappingTypes.Size = new System.Drawing.Size(150, 21);
-            this.cbMappingTypes.TabIndex = 11;
-            this.cbMappingTypes.Visible = false;
-            this.cbMappingTypes.SelectedIndexChanged += new System.EventHandler(this.cbMappingTypes_OnSelectedChanged);
+            this.cbReleaseTypes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbReleaseTypes.DropDownWidth = 150;
+            this.cbReleaseTypes.Enabled = false;
+            this.cbReleaseTypes.FormattingEnabled = true;
+            this.cbReleaseTypes.Location = new System.Drawing.Point(13, 140);
+            this.cbReleaseTypes.Name = "cbReleaseTypes";
+            this.cbReleaseTypes.Size = new System.Drawing.Size(150, 21);
+            this.cbReleaseTypes.TabIndex = 11;
+            this.cbReleaseTypes.Visible = false;
+            this.cbReleaseTypes.SelectedIndexChanged += new System.EventHandler(this.cbReleaseTypes_OnSelectedChanged);
             // 
-            // mappingLabel
+            // lblReleaseType
             // 
-            this.mappingLabel.Location = new System.Drawing.Point(13, 119);
-            this.mappingLabel.Name = "mappingLabel";
-            this.mappingLabel.Size = new System.Drawing.Size(150, 18);
-            this.mappingLabel.TabIndex = 10;
-            this.mappingLabel.Text = "Mapping Type";
-            this.mappingLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.mappingLabel.Visible = false;
+            this.lblReleaseType.Location = new System.Drawing.Point(13, 119);
+            this.lblReleaseType.Name = "lblReleaseType";
+            this.lblReleaseType.Size = new System.Drawing.Size(150, 18);
+            this.lblReleaseType.TabIndex = 10;
+            this.lblReleaseType.Text = "Release Type";
+            this.lblReleaseType.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblReleaseType.Visible = false;
             // 
-            // cbSnapshots
+            // cbBuilds
             // 
-            this.cbSnapshots.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbSnapshots.DropDownWidth = 150;
-            this.cbSnapshots.Enabled = false;
-            this.cbSnapshots.FormattingEnabled = true;
-            this.cbSnapshots.Location = new System.Drawing.Point(12, 185);
-            this.cbSnapshots.Name = "cbSnapshots";
-            this.cbSnapshots.Size = new System.Drawing.Size(150, 21);
-            this.cbSnapshots.TabIndex = 13;
-            this.cbSnapshots.Visible = false;
-            this.cbSnapshots.SelectedIndexChanged += new System.EventHandler(this.cbSnapshots_OnSelectedChanged);
+            this.cbBuilds.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbBuilds.DropDownWidth = 150;
+            this.cbBuilds.Enabled = false;
+            this.cbBuilds.FormattingEnabled = true;
+            this.cbBuilds.Location = new System.Drawing.Point(12, 185);
+            this.cbBuilds.Name = "cbBuilds";
+            this.cbBuilds.Size = new System.Drawing.Size(150, 21);
+            this.cbBuilds.TabIndex = 13;
+            this.cbBuilds.Visible = false;
+            this.cbBuilds.SelectedIndexChanged += new System.EventHandler(this.cbBuilds_OnSelectedChanged);
             // 
-            // snapshotLabel
+            // lblBuilds
             // 
-            this.snapshotLabel.Location = new System.Drawing.Point(12, 164);
-            this.snapshotLabel.Name = "snapshotLabel";
-            this.snapshotLabel.Size = new System.Drawing.Size(150, 18);
-            this.snapshotLabel.TabIndex = 12;
-            this.snapshotLabel.Text = "Snapshop";
-            this.snapshotLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.snapshotLabel.Visible = false;
+            this.lblBuilds.Location = new System.Drawing.Point(12, 164);
+            this.lblBuilds.Name = "lblBuilds";
+            this.lblBuilds.Size = new System.Drawing.Size(150, 18);
+            this.lblBuilds.TabIndex = 12;
+            this.lblBuilds.Text = "Build";
+            this.lblBuilds.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblBuilds.Visible = false;
             // 
             // statusStrip1
             // 
@@ -213,13 +213,13 @@ namespace MinecraftModsDeobfuscator {
             // 
             // btnReloadMappings
             // 
-            this.btnReloadMappings.Location = new System.Drawing.Point(12, 314);
-            this.btnReloadMappings.Name = "btnReloadMappings";
-            this.btnReloadMappings.Size = new System.Drawing.Size(150, 25);
-            this.btnReloadMappings.TabIndex = 16;
-            this.btnReloadMappings.Text = "Reload Mappings";
-            this.btnReloadMappings.UseVisualStyleBackColor = true;
-            this.btnReloadMappings.Click += new System.EventHandler(this.btnReloadMappings_OnClick);
+            this.btnReloadMapping.Location = new System.Drawing.Point(12, 314);
+            this.btnReloadMapping.Name = "btnReloadMappings";
+            this.btnReloadMapping.Size = new System.Drawing.Size(150, 25);
+            this.btnReloadMapping.TabIndex = 16;
+            this.btnReloadMapping.Text = "Reload Mappings";
+            this.btnReloadMapping.UseVisualStyleBackColor = true;
+            this.btnReloadMapping.Click += new System.EventHandler(this.btnReloadMappings_OnClick);
             // 
             // txtLogConsole
             // 
@@ -240,13 +240,13 @@ namespace MinecraftModsDeobfuscator {
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(800, 450);
             this.Controls.Add(this.txtLogConsole);
-            this.Controls.Add(this.btnReloadMappings);
+            this.Controls.Add(this.btnReloadMapping);
             this.Controls.Add(this.btnClearLog);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.cbSnapshots);
-            this.Controls.Add(this.snapshotLabel);
-            this.Controls.Add(this.cbMappingTypes);
-            this.Controls.Add(this.mappingLabel);
+            this.Controls.Add(this.cbBuilds);
+            this.Controls.Add(this.lblBuilds);
+            this.Controls.Add(this.cbReleaseTypes);
+            this.Controls.Add(this.lblReleaseType);
             this.Controls.Add(this.cbMinecraftVersions);
             this.Controls.Add(this.mcVersionLabel);
             this.Controls.Add(this.btnStart);
@@ -278,7 +278,7 @@ namespace MinecraftModsDeobfuscator {
             base.Dispose(disposing);
         }
 
-        private Button btnReloadMappings;
+        private Button btnReloadMapping;
         private Button btnClearLog;
         private TextBox txtLogConsole;
     }

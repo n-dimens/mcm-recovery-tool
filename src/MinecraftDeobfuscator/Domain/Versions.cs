@@ -26,7 +26,7 @@ namespace MinecraftModsDeobfuscator.Domain {
             BuildNumber,
         }
 
-        private Dictionary<string, Dictionary<string, string[]>> mappings = new Dictionary<string, Dictionary<string, string[]>>();
+        private Dictionary<string, Dictionary<string, string[]>> versionsStructure = new Dictionary<string, Dictionary<string, string[]>>();
 
         public event EventHandler LoadingCompleted;
 
@@ -40,19 +40,19 @@ namespace MinecraftModsDeobfuscator.Domain {
         }
 
         public IReadOnlyList<string> GetVersionList() {
-            return new ReadOnlyCollection<string>(this.mappings.Keys.ToList());
+            return new ReadOnlyCollection<string>(this.versionsStructure.Keys.ToList());
         }
 
-        public IReadOnlyList<string> GetMappingTypesList(string minecraftVersion) {
-            return new ReadOnlyCollection<string>(this.mappings[minecraftVersion].Keys.ToList());
+        public IReadOnlyList<string> GetReleaseTypesList(string minecraftVersion) {
+            return new ReadOnlyCollection<string>(this.versionsStructure[minecraftVersion].Keys.ToList());
         }
 
-        public IReadOnlyList<string> GetBuildList(string minecraftVersion, string mappingType) {
-            return new ReadOnlyCollection<string>(this.mappings[minecraftVersion][mappingType]);
+        public IReadOnlyList<string> GetBuildList(string version, string releaseType) {
+            return new ReadOnlyCollection<string>(this.versionsStructure[version][releaseType]);
         }
 
         private void GetVersions() {
-            this.mappings = new Dictionary<string, Dictionary<string, string[]>>();
+            this.versionsStructure = new Dictionary<string, Dictionary<string, string[]>>();
 
             string versionsFileContent;
             using (var webClient = new WebClient()) {
@@ -61,18 +61,18 @@ namespace MinecraftModsDeobfuscator.Domain {
 
             var nodeReader = new JsonTextReader(new StringReader(versionsFileContent));
             var currentNodeType = VersionsNodeType.Root;
-            string mcVersion = null;
-            string mapTypeName = null;
+            string version = null;
+            string releaseType = null;
             var buildList = new List<string>();
             while (nodeReader.Read()) {
                 if (nodeReader.Value != null) {
                     switch (currentNodeType) {
                         case VersionsNodeType.Version:
-                            mcVersion = nodeReader.Value.ToString();
-                            this.mappings[mcVersion] = new Dictionary<string, string[]>();
+                            version = nodeReader.Value.ToString();
+                            this.versionsStructure[version] = new Dictionary<string, string[]>();
                             break;
                         case VersionsNodeType.ReleaseType:
-                            mapTypeName = nodeReader.Value.ToString();
+                            releaseType = nodeReader.Value.ToString();
                             break;
                         case VersionsNodeType.BuildNumber:
                             buildList.Add(nodeReader.Value.ToString());
@@ -83,7 +83,7 @@ namespace MinecraftModsDeobfuscator.Domain {
                 }
 
                 if (nodeReader.TokenType == JsonToken.EndArray) {
-                    this.mappings[mcVersion][mapTypeName] = buildList.ToArray();
+                    this.versionsStructure[version][releaseType] = buildList.ToArray();
                     buildList.Clear();
                 }
 

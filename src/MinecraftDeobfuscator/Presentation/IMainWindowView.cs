@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MinecraftModsDeobfuscator.Presentation {
     interface IMainWindowView {
-        void UpdateSnapshotData();
+        void UpdateMapping();
 
         void MappingFetched();
 

@@ -11,7 +11,7 @@ namespace MinecraftModsDeobfuscator.Domain {
     // todo: remove dependency from file system
     // todo: required class for managment HomeDirectory \ cacheDirectory $HOME/.mmdisassembler
     public class Deobfuscator {
-        private readonly List<ZipInfo> javaFiles;
+        private readonly List<ZipInfo> sourceCodeFiles;
 
         private readonly List<ZipInfo> miscFiles;
 
@@ -23,7 +23,7 @@ namespace MinecraftModsDeobfuscator.Domain {
 
         public Deobfuscator(Mapping mapping) {
             this.mappingManager = mapping;
-            this.javaFiles = new List<ZipInfo>();
+            this.sourceCodeFiles = new List<ZipInfo>();
             this.miscFiles = new List<ZipInfo>();
         }
 
@@ -50,7 +50,7 @@ namespace MinecraftModsDeobfuscator.Domain {
                     OnReportDeobfuscateProgress((int)(100.0 * processedFilesCount / GetFilesFoundCount()));
                 }
 
-                foreach (var javaFile in this.javaFiles) {
+                foreach (var javaFile in this.sourceCodeFiles) {
                     var targetFile = new FileInfo(Path.Combine(targetDirectory.FullName, javaFile.FullName.Replace("/", "\\")));
                     if (!targetFile.Directory.Exists) {
                         targetFile.Directory.Create();
@@ -78,14 +78,14 @@ namespace MinecraftModsDeobfuscator.Domain {
         }
 
         private bool ParseInputZip(string filePath) {
-            this.javaFiles.Clear();
+            this.sourceCodeFiles.Clear();
             this.miscFiles.Clear();
             using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
             using (var zipArchive = new ZipArchive(fs, ZipArchiveMode.Read)) {
                 foreach (var entry in zipArchive.Entries) {
                     if (entry.Name != "") {
                         if (entry.FullName.EndsWith(".java")) {
-                            this.javaFiles.Add(new ZipInfo(entry));
+                            this.sourceCodeFiles.Add(new ZipInfo(entry));
                         }
                         else {
                             this.miscFiles.Add(new ZipInfo(entry));
@@ -130,7 +130,7 @@ namespace MinecraftModsDeobfuscator.Domain {
         }
 
         private int GetFilesFoundCount() {
-            return this.javaFiles.Count + this.miscFiles.Count;
+            return this.sourceCodeFiles.Count + this.miscFiles.Count;
         }
 
         private void OnDeobfuscationCompleted() {

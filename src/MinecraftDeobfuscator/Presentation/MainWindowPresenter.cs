@@ -56,9 +56,9 @@ namespace MinecraftModsDeobfuscator.Presentation {
             this.versionsManager.LoadVersions();
         }
 
-        public void LoadMapping(string mcVersion, string mapType, string snapshot) {
+        public void LoadMapping(string mcVersion, string releaseType, string buildNumber) {
             IsMappingsLoadingCompleted = false;
-            this.mapping.LoadMapping(mcVersion, mapType, snapshot);
+            this.mapping.LoadMapping(mcVersion, releaseType, buildNumber);
         }
 
         public void LoadLiveMapping() {
@@ -82,7 +82,7 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
         private void VersionsManager_LoadingCompleted(object sender, EventArgs e) {
             IsVersionsLoadingCompleted = true;
-            this.view.UpdateSnapshotData();
+            this.view.UpdateMapping();
         }
 
         private void Mapping_LoadingCompleted(object sender, EventArgs e) {
@@ -94,19 +94,19 @@ namespace MinecraftModsDeobfuscator.Presentation {
             return this.versionsManager.GetVersionList();
         }
 
-        public IReadOnlyList<string> GetMappingTypesList(string minecraftVersion) {
-            return this.versionsManager.GetMappingTypesList(minecraftVersion);
+        public IReadOnlyList<string> GetReleaseTypesList(string minecraftVersion) {
+            return this.versionsManager.GetReleaseTypesList(minecraftVersion);
         }
 
         public IReadOnlyList<string> GetBuildList(string minecraftVersion, string releaseType) {
             return this.versionsManager.GetBuildList(minecraftVersion, releaseType);
         }
 
-        public int GetNodeDictionarySize() {
+        public int GetMappingSize() {
             return this.mapping.GetNodeDictionarySize();
         }
 
-        public bool IsNodeDictionaryEmpty() {
+        public bool IsMappingEmpty() {
             return this.mapping.IsNodeDictionaryEmpty();
         }
 

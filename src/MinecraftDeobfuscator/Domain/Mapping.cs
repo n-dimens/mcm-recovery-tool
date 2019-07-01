@@ -22,16 +22,16 @@ namespace MinecraftModsDeobfuscator.Domain {
 
         public event EventHandler LiveLoadingCompleted;
 
-        public void LoadMapping(string mcVersion, string mapType, string snapshot) {
+        public void LoadMapping(string mcVersion, string releaseType, string buildNumber) {
             var task = new Task(() => {
                 this.nodeDictionary.Clear();
                 using (WebClient webClient = new WebClient()) {
                     string address = null;
-                    if (mapType.Equals("stable", StringComparison.OrdinalIgnoreCase)) {
-                        address = string.Format(StableZipUrl, snapshot, mcVersion);
+                    if (releaseType.Equals("stable", StringComparison.OrdinalIgnoreCase)) {
+                        address = string.Format(StableZipUrl, buildNumber, mcVersion);
                     }
-                    else if (mapType.Equals("snapshot", StringComparison.OrdinalIgnoreCase)) {
-                        address = string.Format(SnapshotZipUrl, snapshot, mcVersion);
+                    else if (releaseType.Equals("snapshot", StringComparison.OrdinalIgnoreCase)) {
+                        address = string.Format(SnapshotZipUrl, buildNumber, mcVersion);
                     }
 
                     using (var zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)))) {
