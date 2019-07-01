@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MinecraftModsDeobfuscator.Domain {
+    // todo: required class for managment HomeDirectory \ cacheDirectory $HOME/.mmdisassembler
     class Disassembler {
         private readonly ProcessStartInfo processStartInfo;
 

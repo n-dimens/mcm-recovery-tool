@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 namespace MinecraftModsDeobfuscator.Domain {
-  internal class Node : Dictionary<char, Node>
+  public class Node : Dictionary<char, Node>
   {
     public string WholeKey { get; set; }
 

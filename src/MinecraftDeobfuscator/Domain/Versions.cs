@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 namespace MinecraftModsDeobfuscator.Domain {
+    // todo: remove dependency from file system
+    // todo: required class for managment HomeDirectory \ cacheDirectory $HOME/.mmdisassembler
     public class Versions {
         private static string VersionJsonUrl = "http://export.mcpbot.bspk.rs/versions.json";
 
