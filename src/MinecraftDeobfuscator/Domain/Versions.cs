@@ -12,8 +12,6 @@ namespace MinecraftModsDeobfuscator.Domain {
     // todo: remove dependency from file system
     // todo: required class for managment HomeDirectory \ cacheDirectory $HOME/.mmdisassembler
     public class Versions {
-        private static string VersionJsonUrl = "http://export.mcpbot.bspk.rs/versions.json";
-
         private enum VersionsNodeType {
             Error = -1,
 
@@ -26,12 +24,18 @@ namespace MinecraftModsDeobfuscator.Domain {
             BuildNumber,
         }
 
+        private readonly MappingStore store;
+
         private Dictionary<string, Dictionary<string, string[]>> versionsStructure = new Dictionary<string, Dictionary<string, string[]>>();
 
         public event EventHandler LoadingCompleted;
 
-        public void LoadVersions() {
-            var task = new Task(() => { GetVersions(); });
+        public Versions(MappingStore store) {
+            this.store = store;
+        }
+
+        public void LoadVersions(bool isReload) {
+            var task = new Task(() => { GetVersions(isReload); });
             task.ContinueWith(t => {
                 OnLoadingCompleted();
             });
@@ -51,14 +55,10 @@ namespace MinecraftModsDeobfuscator.Domain {
             return new ReadOnlyCollection<string>(this.versionsStructure[version][releaseType]);
         }
 
-        private void GetVersions() {
+        private void GetVersions(bool isReload) {
             this.versionsStructure = new Dictionary<string, Dictionary<string, string[]>>();
 
-            string versionsFileContent;
-            using (var webClient = new WebClient()) {
-                versionsFileContent = Encoding.UTF8.GetString(webClient.DownloadData(VersionJsonUrl));
-            }
-
+            var versionsFileContent = this.store.GetVersions(isReload);
             var nodeReader = new JsonTextReader(new StringReader(versionsFileContent));
             var currentNodeType = VersionsNodeType.Root;
             string version = null;

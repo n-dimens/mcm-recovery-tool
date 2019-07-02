@@ -18,7 +18,7 @@ namespace MinecraftModsDeobfuscator {
 
         private void frmMain_OnLoad(object sender, EventArgs e) {
             this.presenter.ReportDeobfuscateProgress += Presenter_ReportDeobfuscateProgress;
-            LoadVersions();
+            LoadVersions(false);
         }
 
         private bool IsReady() {
@@ -118,7 +118,7 @@ namespace MinecraftModsDeobfuscator {
             this.cbBuilds.Visible = isMinecraftVersionSelected;
             this.lblMappingCount.Text = "Mappings: 0";
             ClearLog();
-            LoadVersions();
+            LoadVersions(true);
         }
 
         private void btnClearLog_OnClick(object sender, EventArgs e) {
@@ -176,11 +176,11 @@ namespace MinecraftModsDeobfuscator {
             DownloadMapping();
         }
 
-        private void LoadVersions() {
+        private void LoadVersions(bool isReload) {
             LockLists();
             this.btnReloadMapping.Enabled = false;
             Debug.WriteLine("Fetching Mappings");
-            this.presenter.LoadVersions();
+            this.presenter.LoadVersions(isReload);
         }
 
         private void DownloadLiveMapping() {

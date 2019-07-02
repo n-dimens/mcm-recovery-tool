@@ -48,6 +48,7 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Domain\MappingStore.cs" />
     <Compile Include="Domain\Deobfuscator.cs" />
     <Compile Include="Domain\Disassembler.cs" />
     <Compile Include="Domain\Mapping.cs" />

@@ -27,12 +27,12 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
         public MainWindowPresenter(IMainWindowView view) {
             this.view = view;
-
-            this.mapping = new Mapping();
+            var mappingStore = new MappingStore();
+            this.mapping = new Mapping(mappingStore);
             this.mapping.LoadingCompleted += Mapping_LoadingCompleted;
             this.mapping.LiveLoadingCompleted += Mapping_LoadingCompleted;
 
-            this.versionsManager = new Versions();
+            this.versionsManager = new Versions(mappingStore);
             this.versionsManager.LoadingCompleted += VersionsManager_LoadingCompleted;
 
             this.deobfuscator = new Deobfuscator(this.mapping);
@@ -51,9 +51,9 @@ namespace MinecraftModsDeobfuscator.Presentation {
             }
         }
 
-        public void LoadVersions() {
+        public void LoadVersions(bool isReload) {
             IsVersionsLoadingCompleted = false;
-            this.versionsManager.LoadVersions();
+            this.versionsManager.LoadVersions(isReload);
         }
 
         public void LoadMapping(string mcVersion, string releaseType, string buildNumber) {

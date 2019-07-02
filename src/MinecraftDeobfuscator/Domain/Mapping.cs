@@ -10,11 +10,7 @@ using System.Threading.Tasks;
 
 namespace MinecraftModsDeobfuscator.Domain {
     public class Mapping {
-        private static string StableZipUrl = "http://export.mcpbot.bspk.rs/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
-        private static string SnapshotZipUrl = "http://export.mcpbot.bspk.rs/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
-        private static string LiveFields = "http://export.mcpbot.bspk.rs/fields.csv";
-        private static string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
-        private static string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
+        private readonly MappingStore store;
 
         private NodeDictionary nodeDictionary = new NodeDictionary();
 
@@ -22,23 +18,17 @@ namespace MinecraftModsDeobfuscator.Domain {
 
         public event EventHandler LiveLoadingCompleted;
 
+        public Mapping(MappingStore store) {
+            this.store = store;
+        }
+
         public void LoadMapping(string mcVersion, string releaseType, string buildNumber) {
             var task = new Task(() => {
                 this.nodeDictionary.Clear();
-                using (WebClient webClient = new WebClient()) {
-                    string address = null;
-                    if (releaseType.Equals("stable", StringComparison.OrdinalIgnoreCase)) {
-                        address = string.Format(StableZipUrl, buildNumber, mcVersion);
-                    }
-                    else if (releaseType.Equals("snapshot", StringComparison.OrdinalIgnoreCase)) {
-                        address = string.Format(SnapshotZipUrl, buildNumber, mcVersion);
-                    }
-
-                    using (var zipMapping = new ZipArchive(new MemoryStream(webClient.DownloadData(address)))) {
-                        foreach (ZipArchiveEntry entry in zipMapping.Entries) {
-                            Debug.WriteLine("Entry: " + entry);
-                            ParseStream(entry.Open());
-                        }
+                using (var zipMapping = new ZipArchive(this.store.GetMapping(mcVersion, releaseType, buildNumber))) {
+                    foreach (ZipArchiveEntry entry in zipMapping.Entries) {
+                        Debug.WriteLine("Entry: " + entry);
+                        ParseStream(entry.Open());
                     }
                 }
             });
@@ -53,15 +43,13 @@ namespace MinecraftModsDeobfuscator.Domain {
         public void LoadLiveMapping() {
             var task = new Task(() => {
                 this.nodeDictionary.Clear();
-                using (WebClient webClient = new WebClient()) {
-                    Debug.WriteLine("Entry: Live Fields");
-                    ParseStream(new MemoryStream(webClient.DownloadData(LiveFields)));
-                    Debug.WriteLine("Entry: Live Methods");
-                    ParseStream(new MemoryStream(webClient.DownloadData(LiveMethods)));
-                    Debug.WriteLine("Entry: Live Params");
-                    ParseStream(new MemoryStream(webClient.DownloadData(LiveParams)));
-                    Debug.WriteLine("Mappings: " + this.nodeDictionary.Count);
-                }
+                Debug.WriteLine("Entry: Live Fields");
+                ParseStream(this.store.GetLiveFieldsMapping());
+                Debug.WriteLine("Entry: Live Methods");
+                ParseStream(this.store.GetLiveMethodsMapping());
+                Debug.WriteLine("Entry: Live Params");
+                ParseStream(this.store.GetLiveParamsMapping());
+                Debug.WriteLine("Mappings: " + this.nodeDictionary.Size);
             });
 
             task.ContinueWith(t => {
@@ -81,22 +69,22 @@ namespace MinecraftModsDeobfuscator.Domain {
                 if (!str.Equals("searge,name,side,desc", StringComparison.OrdinalIgnoreCase) &&
                     !str.Equals("param,name,side", StringComparison.OrdinalIgnoreCase)) {
                     string[] strArray = str.Split(',');
-                    this.nodeDictionary[strArray[0]] = strArray[1];
+                    this.nodeDictionary.InsertNode(strArray[0], strArray[1]);
                 }
 
                 while (!streamReader.EndOfStream) {
                     string[] strArray = streamReader.ReadLine().Split(',');
-                    this.nodeDictionary[strArray[0]] = strArray[1];
+                    this.nodeDictionary.InsertNode(strArray[0], strArray[1]);
                 }
             }
         }
 
         public int GetNodeDictionarySize() {
-            return this.nodeDictionary.Count;
+            return this.nodeDictionary.Size;
         }
 
         public bool IsNodeDictionaryEmpty() {
-            return this.nodeDictionary.Count == 0;
+            return this.nodeDictionary.Size == 0;
         }
 
         private void OnLoadingCompleted() {
