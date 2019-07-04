@@ -46,24 +46,60 @@ namespace MinecraftModsDeobfuscator.Domain {
             }
 
             if (WorkingDirectory.Exists) {
-                WorkingDirectory.Delete();
+                WorkingDirectory = new DirectoryInfo(WorkingDirectory.FullName + "-" + Path.GetRandomFileName());
+                WorkingDirectory.Create();
             }
 
-            WorkingDirectory.Create();
+            CreateProjectStructure();
 
-            // todo: 1. unzip archive
-
-            // todo: 2. disassembly folder
             //var disassembler = new Disassembler();
             //disassembler.Disassembly(ModFile.FullName, Path.Combine(TargetDirectory.FullName, "temp"));
 
-            // todo: 3. deobfuscate folder
             var deobfuscator = new Deobfuscator(mapping);
             deobfuscator.ReportDeobfuscateProgress += (s, e) => OnReportProcessProgress(e);
-            deobfuscator.DeobfuscationCompleted += (s, e) => OnProcessingCompleted();
-            deobfuscator.Deobfuscate(WorkingDirectory, ModFile);
+            deobfuscator.DeobfuscationCompleted += Deobfuscator_DeobfuscationCompleted;
+            deobfuscator.Deobfuscate(new DirectoryInfo(GetTempFolderPath()), ModFile);
+        }
 
-            // todo: 4. restructure project folder
+        private void Deobfuscator_DeobfuscationCompleted(object sender, EventArgs e) {
+            var tempFolder = new DirectoryInfo(GetTempFolderPath());
+            var modInfo = Path.Combine(tempFolder.FullName, "mcmod.info");
+            if (File.Exists(modInfo)) {
+                File.Copy(modInfo, Path.Combine(GetResourcesFolderPath(), "mcmod.info"));
+            }
+
+            foreach (var folder in tempFolder.GetDirectories()) {
+                if (folder.Name == "META-INF") {
+                    continue;
+                }
+
+                if (folder.Name == "assets") {
+                    folder.MoveTo(Path.Combine(GetResourcesFolderPath(), folder.Name));
+                    continue;
+                }
+
+                folder.MoveTo(Path.Combine(GetSourceFolderPath(), folder.Name));
+            }
+
+            OnProcessingCompleted();
+        }
+
+        private void CreateProjectStructure() {
+            Directory.CreateDirectory(GetTempFolderPath());
+            Directory.CreateDirectory(GetSourceFolderPath());
+            Directory.CreateDirectory(GetResourcesFolderPath());
+        }
+
+        private string GetTempFolderPath() {
+            return Path.Combine(WorkingDirectory.FullName, "temp");
+        }
+
+        private string GetSourceFolderPath() {
+            return Path.Combine(WorkingDirectory.FullName, "src\\main\\java");
+        }
+
+        private string GetResourcesFolderPath() {
+            return Path.Combine(WorkingDirectory.FullName, "src\\main\\resources");
         }
 
         private void OnReportProcessProgress(int percentProgress) {
