@@ -7,7 +7,7 @@
     <ProjectGuid>{366EF8E0-12BA-4510-86D9-88C3851C91CD}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>MinecraftModsDeobfuscator</RootNamespace>
-    <AssemblyName>MinecraftModsDeobfuscator</AssemblyName>
+    <AssemblyName>MinecraftModRecoveryTool</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -52,6 +52,8 @@
     <Compile Include="Domain\Deobfuscator.cs" />
     <Compile Include="Domain\Disassembler.cs" />
     <Compile Include="Domain\Mapping.cs" />
+    <Compile Include="Domain\ModInfo.cs" />
+    <Compile Include="Domain\Project.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>

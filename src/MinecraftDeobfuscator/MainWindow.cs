@@ -22,15 +22,7 @@ namespace MinecraftModsDeobfuscator {
         }
 
         private bool IsReady() {
-            var isLoadingCompleted = this.presenter.IsVersionsLoadingCompleted && this.presenter.IsMappingsLoadingCompleted && this.presenter.IsDeobfuscateCompleted;
-            if (isLoadingCompleted && !this.presenter.IsMappingEmpty()) {
-                var fileName = this.presenter.ModFile?.FullName;
-                if (!string.IsNullOrEmpty(fileName)) {
-                    return !string.IsNullOrEmpty(this.presenter.TargetDirectory?.FullName);
-                }
-            }
-
-            return false;
+            return this.presenter.IsReady();
         }
 
         public void UpdateMapping() {
@@ -52,10 +44,10 @@ namespace MinecraftModsDeobfuscator {
             }
 
             this.progressBar.Value = 0;
-            this.presenter.SetInputFile(this.fileDialog.FileName);
+            this.presenter.LoadModFile(this.fileDialog.FileName);
             this.errorProvider1.Clear();
-            this.lblFileName.Text = $"File: {this.presenter.ModFile.Name}";
-            this.folderBrowser.SelectedPath = this.presenter.ModFile.DirectoryName;
+            this.lblFileName.Text = $"File: {this.fileDialog.FileName}";
+            this.folderBrowser.SelectedPath = this.presenter.TargetDirectory.FullName;
             this.lblSaveLocation.Text = $"Save To: {this.presenter.TargetDirectory.FullName}";
             this.btnStart.Enabled = IsReady();
         }

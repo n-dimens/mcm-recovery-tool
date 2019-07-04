@@ -19,6 +19,9 @@ namespace MinecraftModsDeobfuscator.Domain {
 
         public MappingStore() {
             this.mappingDirectory = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "mapping"));
+            if (!this.mappingDirectory.Exists) {
+                this.mappingDirectory.Create();
+            }
         }
 
         public string GetVersions(bool isReload) {

@@ -40,13 +40,6 @@ namespace MinecraftModsDeobfuscator.Domain {
         }
 
         public void Disassembly(string jarFilePath, string targetDirectoryPath) {
-            var targetDirectory = new DirectoryInfo(targetDirectoryPath);
-            if (!targetDirectory.Exists) {
-                targetDirectory.Create();
-            }
-
-            // todo: clean or not?
-
             this.process.StartInfo.Arguments += $"\"{jarFilePath}\" \"{targetDirectoryPath}\"";
             this.process.Start();
             process.BeginOutputReadLine();

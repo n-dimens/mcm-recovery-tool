@@ -11,17 +11,15 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
         private Versions versionsManager;
 
-        private Deobfuscator deobfuscator;
+        private bool isVersionsLoadingCompleted = true;
 
-        public FileInfo ModFile { get; private set; }
+        private bool isMappingsLoadingCompleted = true;
+
+        private bool isDeobfuscateCompleted = true;
+
+        private Project currentProject;
 
         public DirectoryInfo TargetDirectory { get; private set; }
-
-        public bool IsVersionsLoadingCompleted { get; private set; } = true;
-
-        public bool IsMappingsLoadingCompleted { get; private set; } = true;
-
-        public bool IsDeobfuscateCompleted { get; private set; } = true;
 
         public event EventHandler<int> ReportDeobfuscateProgress;
 
@@ -34,59 +32,60 @@ namespace MinecraftModsDeobfuscator.Presentation {
 
             this.versionsManager = new Versions(mappingStore);
             this.versionsManager.LoadingCompleted += VersionsManager_LoadingCompleted;
+        }
 
-            this.deobfuscator = new Deobfuscator(this.mapping);
-            this.deobfuscator.ReportDeobfuscateProgress += Deobfuscator_ReportDeobfuscateProgress;
-            this.deobfuscator.DeobfuscationCompleted += Deobfuscator_DeobfuscationCompleted;
+        public bool IsReady() {
+            var isLoadingCompleted = this.isVersionsLoadingCompleted && this.isMappingsLoadingCompleted && this.isDeobfuscateCompleted;
+            if (isLoadingCompleted && !IsMappingEmpty()) {
+                return this.currentProject == null ? false : this.currentProject.IsReady();
+            }
+
+            return false;
+        }
+
+        public void LoadModFile(string filePath) {
+            this.currentProject = new Project(filePath);
+            this.currentProject.ReportProcessProgress += (s, e) => OnReportDeobfuscateProgress(e);
+            this.currentProject.ProcessingCompleted += Deobfuscator_DeobfuscationCompleted;
+            TargetDirectory = this.currentProject.WorkingDirectory;
         }
 
         public void SetTargetDirectory(string path) {
-            TargetDirectory = new DirectoryInfo(Path.Combine(path, "output"));
-        }
-
-        public void SetInputFile(string filePath) {
-            ModFile = new FileInfo(filePath);
-            if (TargetDirectory == null) {
-                SetTargetDirectory(ModFile.DirectoryName);
-            }
+            TargetDirectory = new DirectoryInfo(path);
         }
 
         public void LoadVersions(bool isReload) {
-            IsVersionsLoadingCompleted = false;
+            this.isVersionsLoadingCompleted = false;
             this.versionsManager.LoadVersions(isReload);
         }
 
         public void LoadMapping(string mcVersion, string releaseType, string buildNumber) {
-            IsMappingsLoadingCompleted = false;
+            this.isMappingsLoadingCompleted = false;
             this.mapping.LoadMapping(mcVersion, releaseType, buildNumber);
         }
 
         public void LoadLiveMapping() {
-            IsMappingsLoadingCompleted = false;
+            this.isMappingsLoadingCompleted = false;
             this.mapping.LoadLiveMapping();
         }
 
         public void Deobfuscate() {
-            IsDeobfuscateCompleted = false;
-            this.deobfuscator.Deobfuscate(TargetDirectory, ModFile);
-        }
-
-        private void Deobfuscator_ReportDeobfuscateProgress(object sender, int e) {
-            OnReportDeobfuscateProgress(e);
+            this.isDeobfuscateCompleted = false;
+            this.currentProject.Process(this.mapping, TargetDirectory);
         }
 
         private void Deobfuscator_DeobfuscationCompleted(object sender, EventArgs e) {
-            IsDeobfuscateCompleted = true;
+            this.isDeobfuscateCompleted = true;
             this.view.Deobfuscate_OnCompleted();
         }
 
         private void VersionsManager_LoadingCompleted(object sender, EventArgs e) {
-            IsVersionsLoadingCompleted = true;
+            this.isVersionsLoadingCompleted = true;
             this.view.UpdateMapping();
         }
 
         private void Mapping_LoadingCompleted(object sender, EventArgs e) {
-            IsMappingsLoadingCompleted = true;
+            this.isMappingsLoadingCompleted = true;
             this.view.MappingFetched();
         }
 

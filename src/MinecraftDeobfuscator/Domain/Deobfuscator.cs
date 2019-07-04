@@ -31,9 +31,6 @@ namespace MinecraftModsDeobfuscator.Domain {
         public void Deobfuscate(DirectoryInfo targetDirectory, FileInfo modFile) {
             var task = new Task(() => {
                 var processedFilesCount = 0L;
-                if (!targetDirectory.Exists) {
-                    targetDirectory.Create();
-                }
 
                 // todo: report about progress this stage
                 Disassemly(targetDirectory, modFile);
