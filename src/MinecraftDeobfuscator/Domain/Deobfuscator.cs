@@ -32,8 +32,8 @@ namespace MinecraftModsDeobfuscator.Domain {
             var task = new Task(() => {
                 var processedFilesCount = 0L;
 
-                // todo: report about progress this stage
-                Disassemly(targetDirectory, modFile);
+                // todo: move to Mod class, retrieve Mod object instead file
+                ParseInputZip(Path.Combine(targetDirectory.FullName, modFile.Name));
 
                 Debug.WriteLine($"Writing to { targetDirectory.FullName}");
                 foreach (var miscFile in this.miscFiles) {
@@ -66,12 +66,6 @@ namespace MinecraftModsDeobfuscator.Domain {
             });
 
             task.Start();
-        }
-
-        private void Disassemly(DirectoryInfo targetDirectory, FileInfo modFile) {
-            var disassembler = new Disassembler();
-            disassembler.Disassembly(modFile.FullName, targetDirectory.FullName); // path?
-            ParseInputZip(Path.Combine(targetDirectory.FullName, modFile.Name));
         }
 
         private bool ParseInputZip(string filePath) {

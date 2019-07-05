@@ -52,8 +52,10 @@ namespace MinecraftModsDeobfuscator.Domain {
 
             CreateProjectStructure();
 
-            //var disassembler = new Disassembler();
-            //disassembler.Disassembly(ModFile.FullName, Path.Combine(TargetDirectory.FullName, "temp"));
+            // todo: report about progress this stage
+            var disassembler = new Disassembler();
+            // disassembler.Completed +=
+            disassembler.Disassembly(ModFile.FullName, GetTempFolderPath());
 
             var deobfuscator = new Deobfuscator(mapping);
             deobfuscator.ReportDeobfuscateProgress += (s, e) => OnReportProcessProgress(e);
