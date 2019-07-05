@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace MinecraftModsDeobfuscator.Domain {
-    class HomeDirectory : IHomeDirectory {
+    public class HomeDirectory : IHomeDirectory {
         private DirectoryInfo currentDirectory;
 
         private DirectoryInfo homeDirectory;
