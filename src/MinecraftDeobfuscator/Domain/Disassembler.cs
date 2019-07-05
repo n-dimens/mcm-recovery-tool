@@ -17,12 +17,12 @@ namespace MinecraftModsDeobfuscator.Domain {
 
         // public event EventHandler<int> ReportProgress;
 
-        public Disassembler() {
+        public Disassembler(IHomeDirectory homeDirectory) {
             this.processStartInfo = new ProcessStartInfo("java", "-jar assets\\fernflower.jar ");
             this.processStartInfo.UseShellExecute = false;
             this.processStartInfo.RedirectStandardOutput = true;
             this.processStartInfo.RedirectStandardError = true;
-            this.processStartInfo.WorkingDirectory = Environment.CurrentDirectory;
+            this.processStartInfo.WorkingDirectory = homeDirectory.Path;
             this.process = new Process();
             this.process.StartInfo = this.processStartInfo;
             this.process.EnableRaisingEvents = true;

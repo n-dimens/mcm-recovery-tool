@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 namespace MinecraftModsDeobfuscator.Domain {
     public class Project {
+        private readonly IHomeDirectory homeDirectory;
+
         public FileInfo ModFile { get; }
 
         public DirectoryInfo WorkingDirectory { get; private set; }
@@ -18,11 +20,12 @@ namespace MinecraftModsDeobfuscator.Domain {
 
         public event EventHandler ProcessingCompleted;
 
-        public Project(string filePath) : this(new FileInfo(filePath)) {
-
+        public Project(IHomeDirectory homeDirectory, string filePath)
+            : this(homeDirectory, new FileInfo(filePath)) {
         }
 
-        public Project(FileInfo modFile) {
+        public Project(IHomeDirectory homeDirectory, FileInfo modFile) {
+            this.homeDirectory = homeDirectory;
             ModFile = modFile;
             // parse jar
             // extract mcmod.info
@@ -53,7 +56,7 @@ namespace MinecraftModsDeobfuscator.Domain {
             CreateProjectStructure();
 
             // todo: report about progress this stage
-            var disassembler = new Disassembler();
+            var disassembler = new Disassembler(this.homeDirectory);
             // disassembler.Completed +=
             disassembler.Disassembly(ModFile.FullName, GetTempFolderPath());
 

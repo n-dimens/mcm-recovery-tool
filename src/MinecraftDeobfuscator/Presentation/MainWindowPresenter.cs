@@ -5,6 +5,8 @@ using MinecraftModsDeobfuscator.Domain;
 
 namespace MinecraftModsDeobfuscator.Presentation {
     class MainWindowPresenter {
+        private readonly IHomeDirectory homeDirectory;
+
         private readonly IMainWindowView view;
 
         private Mapping mapping;
@@ -24,8 +26,9 @@ namespace MinecraftModsDeobfuscator.Presentation {
         public event EventHandler<int> ReportDeobfuscateProgress;
 
         public MainWindowPresenter(IMainWindowView view) {
+            this.homeDirectory = new HomeDirectory();
             this.view = view;
-            var mappingStore = new MappingStore();
+            var mappingStore = new MappingStore(this.homeDirectory);
             this.mapping = new Mapping(mappingStore);
             this.mapping.LoadingCompleted += Mapping_LoadingCompleted;
             this.mapping.LiveLoadingCompleted += Mapping_LoadingCompleted;
@@ -44,7 +47,7 @@ namespace MinecraftModsDeobfuscator.Presentation {
         }
 
         public void LoadModFile(string filePath) {
-            this.currentProject = new Project(filePath);
+            this.currentProject = new Project(this.homeDirectory, filePath);
             this.currentProject.ReportProcessProgress += (s, e) => OnReportDeobfuscateProgress(e);
             this.currentProject.ProcessingCompleted += Deobfuscator_DeobfuscationCompleted;
             TargetDirectory = this.currentProject.WorkingDirectory;

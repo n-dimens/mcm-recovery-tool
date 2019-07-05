@@ -17,8 +17,8 @@ namespace MinecraftModsDeobfuscator.Domain {
 
         private DirectoryInfo mappingDirectory;
 
-        public MappingStore() {
-            this.mappingDirectory = new DirectoryInfo(Path.Combine(Environment.CurrentDirectory, "mapping"));
+        public MappingStore(IHomeDirectory homeDirectory) {
+            this.mappingDirectory = new DirectoryInfo(Path.Combine(homeDirectory.Path, "mapping"));
             if (!this.mappingDirectory.Exists) {
                 this.mappingDirectory.Create();
             }
