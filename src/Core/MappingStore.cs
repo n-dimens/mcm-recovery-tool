@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 
 namespace MinecraftModsDeobfuscator.Domain {
     public class MappingStore {
-        private static string VersionJsonUrl = "http://export.mcpbot.bspk.rs/versions.json";
-        private static string StableZipUrl = "http://export.mcpbot.bspk.rs/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
-        private static string SnapshotZipUrl = "http://export.mcpbot.bspk.rs/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
-        private static string LiveFields = "http://export.mcpbot.bspk.rs/fields.csv";
-        private static string LiveMethods = "http://export.mcpbot.bspk.rs/methods.csv";
-        private static string LiveParams = "http://export.mcpbot.bspk.rs/params.csv";
+        private static string VersionJsonUrl = "https://mcpbot.unascribed.com/versions.json";
+        private static string StableZipUrl = "https://mcpbot.unascribed.com/mcp_stable/{0}-{1}/mcp_stable-{0}-{1}.zip";
+        private static string SnapshotZipUrl = "https://mcpbot.unascribed.com/mcp_snapshot/{0}-{1}/mcp_snapshot-{0}-{1}.zip";
+        private static string LiveFields = "https://mcpbot.unascribed.com/fields.csv";
+        private static string LiveMethods = "https://mcpbot.unascribed.com/methods.csv";
+        private static string LiveParams = "https://mcpbot.unascribed.com/params.csv";
 
         private DirectoryInfo mappingDirectory;
 
